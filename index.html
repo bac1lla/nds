@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Сумма прописью с НДС</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-from: #e8edf5;
+      --bg-to: #d4dce8;
+      --card: #ffffff;
+      --text: #1a2332;
+      --muted: #5c6b7f;
+      --accent: #3b6fd4;
+      --accent-hover: #2d5bb8;
+      --accent-light: rgba(59, 111, 212, 0.08);
+      --border: #d8e0ea;
+      --error: #d64545;
+      --error-bg: #fef2f2;
+      --radius: 16px;
+      --shadow: 0 8px 32px rgba(26, 35, 50, 0.08);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(135deg, var(--bg-from) 0%, var(--bg-to) 100%);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+      padding: clamp(1rem, 4vw, 2.5rem);
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: clamp(1.5rem, 4vw, 2rem);
+    }
+
+    header h1 {
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+
+    header p {
+      color: var(--muted);
+      font-size: clamp(0.9rem, 2.5vw, 1rem);
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: clamp(1.25rem, 4vw, 2rem);
+      border: 1px solid var(--border);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 140px;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    @media (max-width: 480px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .field input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      font-size: 1.1rem;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      background: #fafbfc;
+      color: var(--text);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+
+    .field input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-light);
+      background: #fff;
+    }
+
+    .field input.error {
+      border-color: var(--error);
+      background: var(--error-bg);
+    }
+
+    .field .hint {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 0.35rem;
+    }
+
+    .field .error-msg {
+      font-size: 0.8rem;
+      color: var(--error);
+      margin-top: 0.35rem;
+      display: none;
+    }
+
+    .field .error-msg.visible {
+      display: block;
+    }
+
+    .btn-calc {
+      width: 100%;
+      padding: 0.85rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+      background: var(--accent);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      margin-bottom: 1.5rem;
+    }
+
+    .btn-calc:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-calc:active {
+      transform: scale(0.98);
+    }
+
+    .results {
+      display: none;
+    }
+
+    .results.visible {
+      display: block;
+    }
+
+    .results h2 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.75rem;
+    }
+
+    .result-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1.5rem;
+    }
+
+    .result-table th,
+    .result-table td {
+      padding: 0.65rem 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      font-size: clamp(0.85rem, 2.5vw, 0.95rem);
+    }
+
+    .result-table th {
+      font-weight: 600;
+      color: var(--muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .result-table td.label {
+      font-weight: 600;
+      white-space: nowrap;
+      width: 80px;
+    }
+
+    .copy-cell {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.4rem;
+    }
+
+    .copy-cell .copy-value {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .copy-btn {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--muted);
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s, background 0.2s;
+    }
+
+    .copy-btn:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    .copy-btn.copied {
+      color: #2d8a4e;
+      border-color: #2d8a4e;
+      background: #edf7f0;
+    }
+
+    .result-table td.digits .copy-value {
+      font-variant-numeric: tabular-nums;
+      font-family: "SF Mono", "Cascadia Code", "Consolas", monospace;
+      white-space: nowrap;
+    }
+
+    .result-table td.words .copy-value {
+      color: var(--text);
+    }
+
+    @media (max-width: 600px) {
+      .result-table thead {
+        display: none;
+      }
+
+      .result-table tr {
+        display: block;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .result-table td {
+        display: block;
+        border: none;
+        padding: 0.2rem 0;
+      }
+
+      .result-table td.label {
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+      }
+
+      .result-table td.digits .copy-cell::before {
+        content: "Цифры: ";
+        display: block;
+        color: var(--muted);
+        font-family: inherit;
+        font-size: 0.75rem;
+        margin-bottom: 0.15rem;
+      }
+
+      .result-table td.words .copy-cell::before {
+        content: "Прописью: ";
+        display: block;
+        color: var(--muted);
+        font-size: 0.75rem;
+        margin-bottom: 0.15rem;
+      }
+
+      .copy-cell {
+        flex-wrap: wrap;
+      }
+    }
+
+    .template-block {
+      background: var(--accent-light);
+      border: 1px solid rgba(59, 111, 212, 0.15);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      margin-top: 0.5rem;
+    }
+
+    .block-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .block-header h2 {
+      margin-bottom: 0;
+    }
+
+    .template-text {
+      font-size: clamp(0.9rem, 2.5vw, 1rem);
+      line-height: 1.6;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Сумма прописью с НДС</h1>
+      <p>Перевод денежных сумм в текст на русском языке с учётом НДС</p>
+    </header>
+
+    <div class="card">
+      <form id="calcForm" novalidate>
+        <div class="form-grid">
+          <div class="field">
+            <label for="amount">Сумма (без НДС)</label>
+            <input type="text" id="amount" name="amount" placeholder="100.00" inputmode="decimal" autocomplete="off">
+            <div class="hint">Можно вводить через точку или запятую</div>
+            <div class="error-msg" id="amountError">Введите корректную сумму</div>
+          </div>
+          <div class="field">
+            <label for="vat">НДС, %</label>
+            <input type="text" id="vat" name="vat" value="22" inputmode="decimal" autocomplete="off">
+            <div class="hint">0–100</div>
+            <div class="error-msg" id="vatError">Введите процент от 0 до 100</div>
+          </div>
+        </div>
+        <button type="submit" class="btn-calc">Рассчитать</button>
+      </form>
+
+      <div class="results" id="results">
+        <h2>Результат</h2>
+        <table class="result-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Цифры</th>
+              <th>Прописью</th>
+            </tr>
+          </thead>
+          <tbody id="resultBody"></tbody>
+        </table>
+
+        <div class="template-block">
+          <div class="block-header">
+            <h2>Шаблонная строка</h2>
+            <button type="button" class="copy-btn" id="copyTemplateBtn" aria-label="Копировать шаблонную строку" title="Копировать">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
+          </div>
+          <p class="template-text" id="templateText"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ONES_M = ['', 'один', 'два', 'три', 'четыре', 'пять', 'шесть', 'семь', 'восемь', 'девять'];
+    const ONES_F = ['', 'одна', 'две', 'три', 'четыре', 'пять', 'шесть', 'семь', 'восемь', 'девять'];
+    const TEENS = ['десять', 'одиннадцать', 'двенадцать', 'тринадцать', 'четырнадцать',
+      'пятнадцать', 'шестнадцать', 'семнадцать', 'восемнадцать', 'девятнадцать'];
+    const TENS = ['', '', 'двадцать', 'тридцать', 'сорок', 'пятьдесят',
+      'шестьдесят', 'семьдесят', 'восемьдесят', 'девяносто'];
+    const HUNDREDS = ['', 'сто', 'двести', 'триста', 'четыреста', 'пятьсот',
+      'шестьсот', 'семьсот', 'восемьсот', 'девятьсот'];
+
+    const SCALES = [
+      ['', '', '', 'm'],
+      ['тысяча', 'тысячи', 'тысяч', 'f'],
+      ['миллион', 'миллиона', 'миллионов', 'm'],
+      ['миллиард', 'миллиарда', 'миллиардов', 'm'],
+      ['триллион', 'триллиона', 'триллионов', 'm'],
+    ];
+
+    function decline(n, forms) {
+      const abs = Math.abs(n) % 100;
+      const last = abs % 10;
+      if (abs >= 11 && abs <= 14) return forms[2];
+      if (last === 1) return forms[0];
+      if (last >= 2 && last <= 4) return forms[1];
+      return forms[2];
+    }
+
+    function tripletToWords(n, gender) {
+      if (n === 0) return '';
+      const parts = [];
+      const h = Math.floor(n / 100);
+      const remainder = n % 100;
+      const t = Math.floor(remainder / 10);
+      const o = remainder % 10;
+
+      if (h > 0) parts.push(HUNDREDS[h]);
+
+      if (remainder >= 10 && remainder <= 19) {
+        parts.push(TEENS[remainder - 10]);
+      } else {
+        if (t > 0) parts.push(TENS[t]);
+        if (o > 0) {
+          parts.push(gender === 'f' ? ONES_F[o] : ONES_M[o]);
+        }
+      }
+
+      return parts.join(' ');
+    }
+
+    function numberToWords(n, unitGender) {
+      if (n === 0) return 'ноль';
+
+      const parts = [];
+      let scaleIndex = 0;
+
+      while (n > 0) {
+        const triplet = n % 1000;
+        if (triplet > 0) {
+          const scale = SCALES[scaleIndex];
+          const gender = scaleIndex === 0 && unitGender ? unitGender : scale[3];
+          const words = tripletToWords(triplet, gender);
+          if (scaleIndex > 0) {
+            parts.unshift(words + ' ' + decline(triplet, [scale[0], scale[1], scale[2]]));
+          } else {
+            parts.unshift(words);
+          }
+        }
+        n = Math.floor(n / 1000);
+        scaleIndex++;
+      }
+
+      return parts.join(' ').trim();
+    }
+
+    function parseAmount(str) {
+      if (!str || !str.trim()) return null;
+      const normalized = str.trim().replace(/\s/g, '').replace(',', '.');
+      if (!/^\d+(\.\d{0,2})?$/.test(normalized)) return null;
+      const value = parseFloat(normalized);
+      if (isNaN(value) || value < 0) return null;
+      const cents = Math.round(value * 100);
+      return {
+        rubles: Math.floor(cents / 100),
+        kopecks: cents % 100,
+        cents,
+      };
+    }
+
+    function parseVat(str) {
+      if (!str || !str.trim()) return 0;
+      const normalized = str.trim().replace(',', '.');
+      if (!/^\d+(\.\d+)?$/.test(normalized)) return null;
+      const value = parseFloat(normalized);
+      if (isNaN(value) || value < 0 || value > 100) return null;
+      return value;
+    }
+
+    function formatDigits(rubles, kopecks) {
+      const value = rubles + kopecks / 100;
+      return value.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function amountToMoneyText(rubles, kopecks) {
+      const kopecksNum = String(kopecks).padStart(2, '0');
+      const rublesWords = numberToWords(rubles);
+      const rublesUnit = decline(rubles, ['рубль', 'рубля', 'рублей']);
+      const kopecksUnit = decline(kopecks, ['копейка', 'копейки', 'копеек']);
+
+      let kopecksWordsPart;
+      if (kopecks === 0) {
+        kopecksWordsPart = '00 копеек';
+      } else {
+        kopecksWordsPart = numberToWords(kopecks, 'f') + ' ' + kopecksUnit;
+      }
+
+      const fullText = rublesWords + ' ' + rublesUnit + ' ' + kopecksWordsPart;
+      const digits = formatDigits(rubles, kopecks);
+
+      return {
+        rublesNum: rubles.toLocaleString('ru-RU'),
+        kopecksNum,
+        rublesWords,
+        fullText,
+        digits,
+        shortWithSpace: rubles.toLocaleString('ru-RU') + ' (' + rublesWords + ') ' + rublesUnit + ' ' + kopecksNum + ' копеек',
+      };
+    }
+
+    function calcVatAmount(baseCents, vatPercent) {
+      return Math.round(baseCents * vatPercent / 100);
+    }
+
+    function centsToParts(cents) {
+      const absCents = Math.abs(cents);
+      return {
+        rubles: Math.floor(absCents / 100),
+        kopecks: absCents % 100,
+      };
+    }
+
+    function buildTemplate(base, vat, total, vatPercent) {
+      let template = base.shortWithSpace;
+
+      if (vatPercent > 0) {
+        template += ', кроме того НДС ' + formatVatPercent(vatPercent) + '% - ' +
+          vat.shortWithSpace + ', итого ' + total.shortWithSpace;
+      }
+
+      return template;
+    }
+
+    function formatVatPercent(p) {
+      return Number.isInteger(p) ? String(p) : String(p).replace('.', ',');
+    }
+
+    const COPY_BTN_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+
+    function copyCell(value, label) {
+      return '<div class="copy-cell">' +
+        '<span class="copy-value">' + escapeHtml(value) + '</span>' +
+        '<button type="button" class="copy-btn" aria-label="' + escapeHtml(label) + '" title="Копировать">' +
+        COPY_BTN_SVG +
+        '</button></div>';
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function copyText(text, btn) {
+      function onSuccess() {
+        btn.classList.add('copied');
+        const prevTitle = btn.title;
+        btn.title = 'Скопировано';
+        setTimeout(function () {
+          btn.classList.remove('copied');
+          btn.title = prevTitle;
+        }, 1500);
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(onSuccess).catch(function () {
+          fallbackCopy(text, onSuccess);
+        });
+      } else {
+        fallbackCopy(text, onSuccess);
+      }
+    }
+
+    function fallbackCopy(text, onSuccess) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        onSuccess();
+      } finally {
+        document.body.removeChild(ta);
+      }
+    }
+
+    const amountInput = document.getElementById('amount');
+    const vatInput = document.getElementById('vat');
+    const amountError = document.getElementById('amountError');
+    const vatError = document.getElementById('vatError');
+    const results = document.getElementById('results');
+    const resultBody = document.getElementById('resultBody');
+    const templateText = document.getElementById('templateText');
+    const copyTemplateBtn = document.getElementById('copyTemplateBtn');
+    const calcForm = document.getElementById('calcForm');
+
+    let debounceTimer = null;
+
+    function setFieldError(input, errorEl, hasError) {
+      input.classList.toggle('error', hasError);
+      errorEl.classList.toggle('visible', hasError);
+    }
+
+    function calculate() {
+      const amount = parseAmount(amountInput.value);
+      const vatPercent = parseVat(vatInput.value);
+
+      let valid = true;
+
+      if (amount === null) {
+        setFieldError(amountInput, amountError, amountInput.value.trim() !== '');
+        valid = false;
+      } else {
+        setFieldError(amountInput, amountError, false);
+      }
+
+      if (vatPercent === null) {
+        setFieldError(vatInput, vatError, true);
+        valid = false;
+      } else {
+        setFieldError(vatInput, vatError, false);
+      }
+
+      if (!valid) {
+        results.classList.remove('visible');
+        return;
+      }
+
+      const vatCents = calcVatAmount(amount.cents, vatPercent);
+      const totalCents = amount.cents + vatCents;
+
+      const baseParts = { rubles: amount.rubles, kopecks: amount.kopecks };
+      const vatParts = centsToParts(vatCents);
+      const totalParts = centsToParts(totalCents);
+
+      const base = amountToMoneyText(baseParts.rubles, baseParts.kopecks);
+      const vat = amountToMoneyText(vatParts.rubles, vatParts.kopecks);
+      const total = amountToMoneyText(totalParts.rubles, totalParts.kopecks);
+
+      let rows =
+        '<tr>' +
+          '<td class="label">Сумма</td>' +
+          '<td class="digits">' + copyCell(base.digits, 'Копировать сумму в цифрах') + '</td>' +
+          '<td class="words">' + copyCell(base.fullText, 'Копировать сумму прописью') + '</td>' +
+        '</tr>';
+
+      if (vatPercent > 0) {
+        rows +=
+          '<tr>' +
+            '<td class="label">НДС (' + escapeHtml(formatVatPercent(vatPercent)) + '%)</td>' +
+            '<td class="digits">' + copyCell(vat.digits, 'Копировать НДС в цифрах') + '</td>' +
+            '<td class="words">' + copyCell(vat.fullText, 'Копировать НДС прописью') + '</td>' +
+          '</tr>';
+      }
+
+      rows +=
+        '<tr>' +
+          '<td class="label">Итого</td>' +
+          '<td class="digits">' + copyCell(total.digits, 'Копировать итого в цифрах') + '</td>' +
+          '<td class="words">' + copyCell(total.fullText, 'Копировать итого прописью') + '</td>' +
+        '</tr>';
+
+      resultBody.innerHTML = rows;
+
+      templateText.textContent = buildTemplate(base, vat, total, vatPercent);
+      results.classList.add('visible');
+    }
+
+    function debouncedCalculate() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(calculate, 200);
+    }
+
+    calcForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      calculate();
+    });
+
+    amountInput.addEventListener('input', debouncedCalculate);
+    vatInput.addEventListener('input', debouncedCalculate);
+
+    results.addEventListener('click', function (e) {
+      const btn = e.target.closest('.copy-btn');
+      if (!btn || btn.id === 'copyTemplateBtn') return;
+      const cell = btn.closest('.copy-cell');
+      const valueEl = cell && cell.querySelector('.copy-value');
+      if (valueEl) copyText(valueEl.textContent, btn);
+    });
+
+    copyTemplateBtn.addEventListener('click', function () {
+      copyText(templateText.textContent, copyTemplateBtn);
+    });
+
+    amountInput.value = '100';
+    calculate();
+  </script>
+</body>
+</html>
