@@ -668,12 +668,19 @@
     amountInput.addEventListener('input', debouncedCalculate);
     vatInput.addEventListener('input', debouncedCalculate);
 
+    function stripDigitSpaces(text) {
+      return text.replace(/[\s\u00a0\u202f]/g, '');
+    }
+
     results.addEventListener('click', function (e) {
       const btn = e.target.closest('.copy-btn');
       if (!btn || btn.id === 'copyTemplateBtn') return;
       const cell = btn.closest('.copy-cell');
       const valueEl = cell && cell.querySelector('.copy-value');
-      if (valueEl) copyText(valueEl.textContent, btn);
+      if (!valueEl) return;
+      let text = valueEl.textContent;
+      if (btn.closest('td.digits')) text = stripDigitSpaces(text);
+      copyText(text, btn);
     });
 
     copyTemplateBtn.addEventListener('click', function () {
