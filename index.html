@@ -692,6 +692,12 @@
       return forms[2];
     }
 
+    function kopecksLabel(kopecks, useDigits) {
+      var word = decline(kopecks, ['копейка', 'копейки', 'копеек']);
+      if (useDigits || kopecks === 0) return String(kopecks).padStart(2, '0') + ' ' + word;
+      return numberToWords(kopecks, 'f') + ' ' + word;
+    }
+
     function tripletToWords(n, gender) {
       if (n === 0) return '';
       var parts = [], h = Math.floor(n / 100), rem = n % 100, t = Math.floor(rem / 10), o = rem % 10;
@@ -749,17 +755,15 @@
     }
 
     function formatShortWithSpace(rubles, kopecks, capInParens) {
-      var kn = String(kopecks).padStart(2, '0');
       var rw = numberToWords(rubles);
       var ru = decline(rubles, ['рубль', 'рубля', 'рублей']);
       var rwParens = capInParens ? capitalizeFirst(rw) : rw;
-      return rubles.toLocaleString('ru-RU') + ' (' + rwParens + ') ' + ru + ' ' + kn + ' копеек';
+      return rubles.toLocaleString('ru-RU') + ' (' + rwParens + ') ' + ru + ' ' + kopecksLabel(kopecks, true);
     }
 
     function amountToMoneyText(rubles, kopecks) {
-      var kn = String(kopecks).padStart(2, '0');
       var rw = numberToWords(rubles), ru = decline(rubles, ['рубль','рубля','рублей']);
-      var kw = kopecks === 0 ? '00 копеек' : numberToWords(kopecks, 'f') + ' ' + decline(kopecks, ['копейка','копейки','копеек']);
+      var kw = kopecksLabel(kopecks, false);
       return {
         fullText: rw + ' ' + ru + ' ' + kw,
         digits: formatDigits(rubles, kopecks),
