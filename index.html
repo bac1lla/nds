@@ -545,7 +545,7 @@
           <div class="field">
             <label class="field__label" for="builderText">Текст шаблона</label>
             <textarea class="field__textarea" id="builderText" rows="6" spellcheck="false"></textarea>
-            <span class="field__hint">Токены: {база_цифры}, {база_прописью}, {база_кратко}, {ндс_*}, {итого_*}, {ставка_ндс}</span>
+            <span class="field__hint">Токены: {база_кратко} — с (Заглавной) в скобках; {база_скобки} — только (Сто…); _стр — строчные</span>
           </div>
           <div>
             <div class="field__label" style="margin-bottom:var(--space-2)">Превью (100 ₽, НДС 22%)</div>
@@ -636,9 +636,12 @@
     };
 
     var TEMPLATE_TOKENS = [
-      '{база_цифры}', '{база_прописью}', '{база_кратко}',
-      '{ндс_цифры}', '{ндс_прописью}', '{ндс_кратко}',
-      '{итого_цифры}', '{итого_прописью}', '{итого_кратко}',
+      '{база_цифры}', '{база_прописью}', '{база_кратко}', '{база_кратко_стр}',
+      '{база_скобки}', '{база_скобки_стр}',
+      '{ндс_цифры}', '{ндс_прописью}', '{ндс_кратко}', '{ндс_кратко_стр}',
+      '{ндс_скобки}', '{ндс_скобки_стр}',
+      '{итого_цифры}', '{итого_прописью}', '{итого_кратко}', '{итого_кратко_стр}',
+      '{итого_скобки}', '{итого_скобки_стр}',
       '{ставка_ндс}'
     ];
 
@@ -741,6 +744,18 @@
       return formatDigits(rubles, kopecks).replace(/[\s\u00a0\u202f]/g, '');
     }
 
+    function capitalizeFirst(s) {
+      return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+    }
+
+    function formatShortWithSpace(rubles, kopecks, capInParens) {
+      var kn = String(kopecks).padStart(2, '0');
+      var rw = numberToWords(rubles);
+      var ru = decline(rubles, ['рубль', 'рубля', 'рублей']);
+      var rwParens = capInParens ? capitalizeFirst(rw) : rw;
+      return rubles.toLocaleString('ru-RU') + ' (' + rwParens + ') ' + ru + ' ' + kn + ' копеек';
+    }
+
     function amountToMoneyText(rubles, kopecks) {
       var kn = String(kopecks).padStart(2, '0');
       var rw = numberToWords(rubles), ru = decline(rubles, ['рубль','рубля','рублей']);
@@ -749,7 +764,10 @@
         fullText: rw + ' ' + ru + ' ' + kw,
         digits: formatDigits(rubles, kopecks),
         digitsPlain: digitsPlain(rubles, kopecks),
-        shortWithSpace: rubles.toLocaleString('ru-RU') + ' (' + rw + ') ' + ru + ' ' + kn + ' копеек'
+        shortWithSpace: formatShortWithSpace(rubles, kopecks, true),
+        shortWithSpaceLower: formatShortWithSpace(rubles, kopecks, false),
+        inParensCap: '(' + capitalizeFirst(rw) + ')',
+        inParens: '(' + rw + ')'
       };
     }
 
@@ -793,12 +811,21 @@
         '{база_цифры}': base.digitsPlain,
         '{база_прописью}': base.fullText,
         '{база_кратко}': base.shortWithSpace,
+        '{база_кратко_стр}': base.shortWithSpaceLower,
+        '{база_скобки}': base.inParensCap,
+        '{база_скобки_стр}': base.inParens,
         '{ндс_цифры}': vat.digitsPlain,
         '{ндс_прописью}': vat.fullText,
         '{ндс_кратко}': vat.shortWithSpace,
+        '{ндс_кратко_стр}': vat.shortWithSpaceLower,
+        '{ндс_скобки}': vat.inParensCap,
+        '{ндс_скобки_стр}': vat.inParens,
         '{итого_цифры}': total.digitsPlain,
         '{итого_прописью}': total.fullText,
         '{итого_кратко}': total.shortWithSpace,
+        '{итого_кратко_стр}': total.shortWithSpaceLower,
+        '{итого_скобки}': total.inParensCap,
+        '{итого_скобки_стр}': total.inParens,
         '{ставка_ндс}': formatVatPercent(vatPercent)
       };
     }
