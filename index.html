@@ -3,389 +3,686 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#3568d4">
+  <meta name="description" content="Сумма прописью с НДС — калькулятор и перевод чисел в текст">
   <title>Сумма прописью с НДС</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg-from: #e8edf5;
-      --bg-to: #d4dce8;
-      --card: #ffffff;
-      --text: #1a2332;
-      --muted: #5c6b7f;
-      --accent: #3b6fd4;
-      --accent-hover: #2d5bb8;
-      --accent-light: rgba(59, 111, 212, 0.08);
-      --border: #d8e0ea;
-      --error: #d64545;
-      --error-bg: #fef2f2;
-      --radius: 16px;
-      --shadow: 0 8px 32px rgba(26, 35, 50, 0.08);
+      --color-bg: #eef2f7;
+      --color-bg-accent: #e3eaf4;
+      --color-surface: #ffffff;
+      --color-surface-muted: #f7f9fc;
+      --color-surface-hover: #f0f4fa;
+      --color-text: #152033;
+      --color-text-secondary: #5a6b82;
+      --color-text-tertiary: #8b99ab;
+      --color-border: #dde4ee;
+      --color-primary: #3568d4;
+      --color-primary-hover: #2a56b8;
+      --color-primary-soft: rgba(53, 104, 212, 0.1);
+      --color-primary-ring: rgba(53, 104, 212, 0.22);
+      --color-success: #1f8a4c;
+      --color-success-soft: #e8f6ee;
+      --color-warning: #b45309;
+      --color-warning-soft: #fef3c7;
+      --color-error: #d64545;
+      --color-error-soft: #fef2f2;
+      --color-total-bg: #f3f7ff;
+      --color-total-border: #c9daf5;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: "SF Mono", "Cascadia Code", Consolas, monospace;
+      --text-xs: 0.75rem;
+      --text-sm: 0.875rem;
+      --text-base: 1rem;
+      --text-lg: 1.125rem;
+      --text-xl: clamp(1.4rem, 4vw, 1.85rem);
+      --space-1: 0.25rem;
+      --space-2: 0.5rem;
+      --space-3: 0.75rem;
+      --space-4: 1rem;
+      --space-5: 1.25rem;
+      --space-6: 1.5rem;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-full: 999px;
+      --shadow-md: 0 8px 24px rgba(21, 32, 51, 0.08);
+      --container-max: 960px;
+      --transition: 0.18s ease;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-bg: #0f1419;
+        --color-bg-accent: #161d27;
+        --color-surface: #1a2230;
+        --color-surface-muted: #212b3a;
+        --color-surface-hover: #273244;
+        --color-text: #eef2f7;
+        --color-text-secondary: #a3afc0;
+        --color-text-tertiary: #7a8799;
+        --color-border: #2e3a4d;
+        --color-primary: #5b8def;
+        --color-primary-hover: #7aa3f5;
+        --color-primary-soft: rgba(91, 141, 239, 0.14);
+        --color-primary-ring: rgba(91, 141, 239, 0.28);
+        --color-success-soft: rgba(31, 138, 76, 0.15);
+        --color-warning-soft: rgba(180, 83, 9, 0.15);
+        --color-error-soft: rgba(214, 69, 69, 0.12);
+        --color-total-bg: rgba(91, 141, 239, 0.1);
+        --color-total-border: rgba(91, 141, 239, 0.25);
+        --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.25);
+      }
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background: linear-gradient(135deg, var(--bg-from) 0%, var(--bg-to) 100%);
-      color: var(--text);
+      font-family: var(--font-sans);
+      background: radial-gradient(ellipse 80% 50% at 50% -10%, var(--color-primary-soft), transparent),
+        linear-gradient(180deg, var(--color-bg-accent) 0%, var(--color-bg) 100%);
+      color: var(--color-text);
       min-height: 100vh;
-      line-height: 1.5;
-      padding: clamp(1rem, 4vw, 2.5rem);
+      line-height: 1.55;
+      padding: var(--space-4);
+      -webkit-font-smoothing: antialiased;
     }
 
-    .container {
-      max-width: 720px;
-      margin: 0 auto;
-    }
+    .app { max-width: var(--container-max); margin: 0 auto; display: flex; flex-direction: column; gap: var(--space-4); }
 
-    header {
-      text-align: center;
-      margin-bottom: clamp(1.5rem, 4vw, 2rem);
-    }
+    .app-header { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) 0; }
+    .app-header__main { flex: 1; min-width: 200px; }
+    .app-header__title { font-size: var(--text-xl); font-weight: 700; letter-spacing: -0.025em; margin-bottom: var(--space-1); }
+    .app-header__desc { color: var(--color-text-secondary); font-size: var(--text-sm); }
+    .toolbar { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 
-    header h1 {
-      font-size: clamp(1.5rem, 4vw, 2rem);
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      margin-bottom: 0.5rem;
-    }
+    .panel { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); overflow: hidden; }
+    .panel__header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-5); border-bottom: 1px solid var(--color-border); background: var(--color-surface-muted); flex-wrap: wrap; }
+    .panel__title { font-size: var(--text-xs); font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.06em; }
+    .panel__body { padding: var(--space-5); }
+    .panel__body--compact { padding: var(--space-4) var(--space-5); }
 
-    header p {
-      color: var(--muted);
-      font-size: clamp(0.9rem, 2.5vw, 1rem);
-    }
+    .tabs { display: flex; gap: var(--space-1); padding: var(--space-1); background: var(--color-surface-muted); border-radius: var(--radius-md); border: 1px solid var(--color-border); overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .tab { flex: 1; min-width: max-content; padding: 0.6rem 0.75rem; font-size: var(--text-sm); font-weight: 600; color: var(--color-text-secondary); background: transparent; border: none; border-radius: var(--radius-sm); cursor: pointer; transition: all var(--transition); white-space: nowrap; }
+    .tab:hover { color: var(--color-primary); }
+    .tab--active { background: var(--color-surface); color: var(--color-primary); box-shadow: var(--shadow-md); }
+    .tab:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 
-    .card {
-      background: var(--card);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: clamp(1.25rem, 4vw, 2rem);
-      border: 1px solid var(--border);
-    }
+    .mode-panel { display: none; }
+    .mode-panel--active { display: block; }
 
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 140px;
-      gap: 1rem;
-      margin-bottom: 1.25rem;
-    }
+    .form-grid { display: grid; grid-template-columns: 1fr minmax(130px, 170px); gap: var(--space-4); }
+    @media (max-width: 540px) { .form-grid { grid-template-columns: 1fr; } }
 
-    @media (max-width: 480px) {
-      .form-grid {
-        grid-template-columns: 1fr;
+    .field { display: flex; flex-direction: column; gap: var(--space-2); }
+    .field__label { font-size: var(--text-xs); font-weight: 600; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+
+    .input-wrap { position: relative; }
+    .input-wrap__field, .field__textarea, .field__select {
+      width: 100%; padding: 0.75rem 2.5rem 0.75rem 0.9rem; font-size: var(--text-base);
+      font-variant-numeric: tabular-nums; border: 1.5px solid var(--color-border); border-radius: var(--radius-md);
+      background: var(--color-surface-muted); color: var(--color-text); outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .field__textarea { padding: 0.75rem 0.9rem; min-height: 120px; resize: vertical; font-family: var(--font-mono); font-size: var(--text-sm); line-height: 1.6; }
+    .field__select { padding-right: 0.9rem; cursor: pointer; }
+    .input-wrap__field:focus, .field__textarea:focus, .field__select:focus {
+      border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-ring); background: var(--color-surface);
+    }
+    .input-wrap__field--error { border-color: var(--color-error); background: var(--color-error-soft); }
+    .input-wrap__suffix { position: absolute; right: 0.9rem; top: 50%; transform: translateY(-50%); color: var(--color-text-tertiary); font-size: var(--text-sm); font-weight: 600; pointer-events: none; }
+    .field__hint { font-size: var(--text-xs); color: var(--color-text-tertiary); }
+    .field__error { font-size: var(--text-xs); color: var(--color-error); display: none; }
+    .field__error--visible { display: block; }
+
+    .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4); margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--color-border); }
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3); background: var(--color-surface-muted); border-radius: var(--radius-md); border: 1px solid var(--color-border); }
+    .toggle-row__text { font-size: var(--text-sm); font-weight: 500; }
+    .toggle-row__sub { font-size: var(--text-xs); color: var(--color-text-tertiary); margin-top: 2px; }
+    .toggle { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle__slider { position: absolute; inset: 0; background: var(--color-border); border-radius: var(--radius-full); cursor: pointer; transition: background var(--transition); }
+    .toggle__slider::before { content: ""; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform var(--transition); box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+    .toggle input:checked + .toggle__slider { background: var(--color-primary); }
+    .toggle input:checked + .toggle__slider::before { transform: translateX(20px); }
+    .toggle input:focus-visible + .toggle__slider { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+
+    .vat-presets { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+    .vat-presets__label { width: 100%; font-size: var(--text-xs); color: var(--color-text-tertiary); }
+    .chip { padding: 0.35rem 0.7rem; font-size: var(--text-xs); font-weight: 600; color: var(--color-text-secondary); background: var(--color-surface-muted); border: 1px solid var(--color-border); border-radius: var(--radius-full); cursor: pointer; transition: all var(--transition); }
+    .chip:hover { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-soft); }
+    .chip--active { color: var(--color-primary); border-color: var(--color-primary); background: var(--color-primary-soft); }
+    .chip--custom { border-style: dashed; }
+    .vat-add { display: flex; gap: var(--space-2); margin-top: var(--space-2); }
+    .vat-add input { flex: 1; padding: 0.45rem 0.65rem; font-size: var(--text-sm); border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface-muted); color: var(--color-text); }
+
+    .alert { display: none; padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); font-size: var(--text-sm); margin-bottom: var(--space-4); }
+    .alert--visible { display: block; }
+    .alert--warning { background: var(--color-warning-soft); border: 1px solid #fbbf24; color: var(--color-warning); }
+
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); padding: 0.55rem 0.9rem; font-size: var(--text-sm); font-weight: 600; border-radius: var(--radius-sm); border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text-secondary); cursor: pointer; transition: all var(--transition); white-space: nowrap; }
+    .btn:hover { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-soft); }
+    .btn:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+    .btn--primary { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+    .btn--primary:hover { background: var(--color-primary-hover); border-color: var(--color-primary-hover); color: #fff; }
+    .btn--sm { padding: 0.4rem 0.65rem; font-size: var(--text-xs); }
+    .btn--copied { color: var(--color-success) !important; border-color: var(--color-success) !important; background: var(--color-success-soft) !important; }
+
+    .results { display: none; flex-direction: column; gap: var(--space-4); }
+    .results--visible { display: flex; animation: fadeIn .25s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    .results-toolbar { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3); }
+
+    .result-table { width: 100%; border-collapse: collapse; }
+    .result-table th, .result-table td { padding: var(--space-3) var(--space-4); text-align: left; vertical-align: top; border-bottom: 1px solid var(--color-border); font-size: var(--text-sm); }
+    .result-table th { font-weight: 600; color: var(--color-text-tertiary); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.05em; background: var(--color-surface-muted); }
+    .result-table tbody tr:hover:not(.result-row--total) { background: var(--color-surface-hover); }
+    .result-table tbody tr:last-child td { border-bottom: none; }
+    .result-row--total { background: var(--color-total-bg); }
+    .result-row--total td { border-top: 1.5px solid var(--color-total-border); font-weight: 600; }
+    .result-row--total .result-table__label { color: var(--color-primary); }
+    .result-table__label { font-weight: 600; min-width: 90px; }
+    .result-table__label-sub { display: block; font-weight: 500; font-size: var(--text-xs); color: var(--color-text-tertiary); margin-top: 2px; }
+
+    .copy-cell { display: flex; align-items: flex-start; gap: var(--space-2); }
+    .copy-cell__value { flex: 1; min-width: 0; word-break: break-word; }
+    .copy-cell__value--digits { font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .btn-icon { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-text-tertiary); cursor: pointer; transition: all var(--transition); }
+    .btn-icon:hover { color: var(--color-primary); border-color: var(--color-primary); background: var(--color-primary-soft); }
+    .btn-icon--copied { color: var(--color-success); border-color: var(--color-success); background: var(--color-success-soft); }
+
+    .template-panel { background: var(--color-primary-soft); border: 1px solid var(--color-total-border); border-radius: var(--radius-md); padding: var(--space-4) var(--space-5); }
+    .template-panel__header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-3); }
+    .template-panel__title { font-size: var(--text-xs); font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.06em; }
+    .template-panel__text { font-size: var(--text-sm); line-height: 1.65; }
+
+    .btn--excel { border-color: #217346; color: #217346; }
+    .btn--excel:hover { background: rgba(33, 115, 70, 0.1); border-color: #217346; color: #217346; }
+
+    .toolbar-group { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+    .toolbar-group__label { font-size: var(--text-xs); font-weight: 600; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.04em; margin-right: var(--space-1); }
+
+    .batch-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); margin-top: var(--space-3); }
+    .batch-table th, .batch-table td { padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--color-border); text-align: left; vertical-align: top; }
+    .batch-table th { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-tertiary); background: var(--color-surface-muted); position: sticky; top: 0; }
+    .batch-table td.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .batch-table td.inv-wide { min-width: 200px; max-width: 320px; font-size: var(--text-xs); line-height: 1.45; }
+    .batch-table-wrap { max-height: 420px; overflow: auto; border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+    .batch-toolbar { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+
+    .excel-hint { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-3); background: rgba(33, 115, 70, 0.08); border: 1px solid rgba(33, 115, 70, 0.2); border-radius: var(--radius-md); font-size: var(--text-xs); color: var(--color-text-secondary); margin-bottom: var(--space-4); line-height: 1.5; }
+    .excel-hint strong { color: #217346; }
+
+    .batch-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--space-3); margin-bottom: var(--space-4); }
+
+    .mode-switch { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-4); padding: var(--space-3); background: var(--color-surface-muted); border-radius: var(--radius-md); border: 1px solid var(--color-border); }
+    .mode-switch__option { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); cursor: pointer; }
+    .mode-switch__option input { accent-color: var(--color-primary); }
+
+    .builder-split { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+    @media (max-width: 720px) { .builder-split { grid-template-columns: 1fr; } }
+    .builder-preview { background: var(--color-surface-muted); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-4); min-height: 120px; font-size: var(--text-sm); line-height: 1.65; }
+    .token-bar { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3); }
+    .token-chip { padding: 0.3rem 0.55rem; font-size: 0.7rem; font-family: var(--font-mono); background: var(--color-primary-soft); border: 1px solid var(--color-total-border); border-radius: var(--radius-sm); cursor: pointer; color: var(--color-primary); }
+    .token-chip:hover { background: var(--color-primary); color: #fff; }
+
+    .invoice-input { width: 100%; padding: 0.35rem 0.5rem; font-size: var(--text-sm); border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-text); }
+    .invoice-input--num { font-family: var(--font-mono); text-align: right; max-width: 110px; }
+    .invoice-input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 2px var(--color-primary-ring); }
+    .btn-icon--danger:hover { color: var(--color-error); border-color: var(--color-error); background: var(--color-error-soft); }
+    .invoice-totals { margin-top: var(--space-4); padding: var(--space-4); background: var(--color-total-bg); border: 1px solid var(--color-total-border); border-radius: var(--radius-md); }
+    .invoice-totals__row { display: flex; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) 0; font-size: var(--text-sm); border-bottom: 1px solid var(--color-border); }
+    .invoice-totals__row:last-child { border-bottom: none; font-weight: 700; font-size: var(--text-base); color: var(--color-primary); }
+    .invoice-totals__row span.num { font-family: var(--font-mono); }
+
+    .sub-tabs { display: flex; gap: var(--space-1); margin-bottom: var(--space-4); padding: var(--space-1); background: var(--color-surface-muted); border-radius: var(--radius-md); border: 1px solid var(--color-border); }
+    .sub-tab { flex: 1; padding: 0.5rem 0.75rem; font-size: var(--text-xs); font-weight: 600; color: var(--color-text-secondary); background: transparent; border: none; border-radius: var(--radius-sm); cursor: pointer; transition: all var(--transition); }
+    .sub-tab--active { background: var(--color-surface); color: var(--color-primary); box-shadow: var(--shadow-md); }
+
+    .builder-pane { display: none; }
+    .builder-pane--active { display: block; }
+
+    .column-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); padding: var(--space-3) 0; }
+    .column-order { display: flex; flex-wrap: wrap; gap: var(--space-2); padding: var(--space-3) 0; list-style: none; }
+    .column-order__item {
+      display: inline-flex; align-items: center; gap: var(--space-1); padding: 0.25rem 0.5rem 0.25rem 0.35rem;
+      background: var(--color-surface-muted); border: 1px solid var(--color-border); border-radius: var(--radius-full);
+      cursor: grab; transition: border-color var(--transition), box-shadow var(--transition), opacity var(--transition);
+      user-select: none;
+    }
+    .column-order__item:hover { border-color: var(--color-primary); box-shadow: 0 2px 8px var(--color-primary-soft); }
+    .column-order__item--dragging { opacity: 0.45; cursor: grabbing; }
+    .column-order__item--over { border-color: var(--color-primary); background: var(--color-primary-soft); }
+    .column-order__item--hidden { opacity: 0.55; }
+    .column-order__handle { color: var(--color-text-tertiary); font-size: 0.85rem; line-height: 1; pointer-events: none; }
+    .column-order__chip {
+      padding: 0.2rem 0.55rem; font-size: var(--text-xs); font-weight: 600; border: none; border-radius: var(--radius-full);
+      background: transparent; color: var(--color-text-secondary); cursor: pointer; white-space: nowrap;
+    }
+    .column-order__chip--on { color: var(--color-primary); background: var(--color-primary-soft); }
+    .table-columns-details { margin: var(--space-3) 0; }
+    .table-columns-details summary { cursor: pointer; font-size: var(--text-sm); font-weight: 600; color: var(--color-text-secondary); }
+
+    .table-quick-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-4); margin-bottom: var(--space-4); }
+    .table-quick-row .field { flex: 0 0 auto; min-width: 100px; }
+    .table-quick-row .field__inline-input { width: 80px; padding: 0.55rem 0.75rem; font-size: var(--text-base); border: 1.5px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface-muted); }
+    .toggle-compact { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); cursor: pointer; padding-bottom: 0.55rem; }
+
+    .table-total-bar {
+      margin-top: var(--space-4); padding: var(--space-4); background: var(--color-total-bg);
+      border: 1px solid var(--color-total-border); border-radius: var(--radius-md);
+      display: flex; flex-wrap: wrap; gap: var(--space-4); align-items: baseline;
+    }
+    .table-total-bar__main { font-family: var(--font-mono); font-size: var(--text-lg); font-weight: 700; color: var(--color-primary); }
+    .table-total-bar__words { flex: 1; min-width: 200px; font-size: var(--text-sm); color: var(--color-text-secondary); line-height: 1.5; }
+
+    .history-list { display: flex; flex-direction: column; gap: var(--space-2); max-height: 280px; overflow-y: auto; }
+    .history-item { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3); background: var(--color-surface-muted); border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer; transition: all var(--transition); text-align: left; width: 100%; font: inherit; color: inherit; }
+    .history-item:hover { border-color: var(--color-primary); background: var(--color-primary-soft); }
+    .history-item__main { font-size: var(--text-sm); font-weight: 600; font-family: var(--font-mono); }
+    .history-item__sub { font-size: var(--text-xs); color: var(--color-text-tertiary); margin-top: 2px; }
+    .history-empty { font-size: var(--text-sm); color: var(--color-text-tertiary); text-align: center; padding: var(--space-4); }
+
+    .share-box { display: flex; flex-wrap: wrap; gap: var(--space-4); align-items: flex-start; margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--color-border); }
+    .share-box__link { flex: 1; min-width: 200px; display: flex; gap: var(--space-2); }
+    .share-box__link input { flex: 1; padding: 0.5rem 0.65rem; font-size: var(--text-xs); font-family: var(--font-mono); border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface-muted); color: var(--color-text); }
+    .share-box__qr img { display: block; border-radius: var(--radius-sm); border: 1px solid var(--color-border); }
+
+    .toast { position: fixed; bottom: var(--space-4); left: 50%; transform: translateX(-50%) translateY(80px); background: var(--color-text); color: var(--color-bg); padding: var(--space-3) var(--space-5); border-radius: var(--radius-full); font-size: var(--text-sm); font-weight: 600; opacity: 0; pointer-events: none; transition: all .3s ease; z-index: 100; }
+    .toast--visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    details.settings-details { margin-top: var(--space-4); }
+    details.settings-details summary { cursor: pointer; font-size: var(--text-sm); font-weight: 600; color: var(--color-primary); list-style: none; display: flex; align-items: center; gap: var(--space-2); }
+    details.settings-details summary::-webkit-details-marker { display: none; }
+    details.settings-details[open] summary { margin-bottom: var(--space-4); }
+
+    @media (max-width: 640px) {
+      .app-header { flex-direction: column; }
+      .panel__header .toolbar { width: 100%; }
+      .toolbar-group { width: 100%; }
+      .tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .tab { flex: 0 0 auto; min-width: 90px; }
+      .result-table thead { display: none; }
+      .result-table, .result-table tbody, .result-table tr, .result-table td { display: block; }
+      .result-table tr { padding: var(--space-4); border-bottom: 1px solid var(--color-border); }
+      .result-table tr.result-row--total { border-radius: var(--radius-md); margin-top: var(--space-2); border: 1.5px solid var(--color-total-border); }
+      .result-table td { border: none; padding: 0; margin-bottom: var(--space-3); }
+      .result-table td.words { margin-bottom: 0; }
+      .result-table td.digits .copy-cell::before, .result-table td.words .copy-cell::before {
+        display: block; font-size: var(--text-xs); font-weight: 600; color: var(--color-text-tertiary);
+        text-transform: uppercase; margin-bottom: var(--space-1);
       }
+      .result-table td.digits .copy-cell::before { content: "Цифры"; }
+      .result-table td.words .copy-cell::before { content: "Прописью"; }
+      .btn-icon { width: 36px; height: 36px; }
     }
 
-    .field label {
-      display: block;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--muted);
-      margin-bottom: 0.4rem;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
+    @media print {
+      body { background: #fff; padding: 0; color: #000; }
+      .no-print { display: none !important; }
+      .panel { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+      .results { display: flex !important; }
+      .mode-panel { display: none !important; }
+      .mode-panel--active { display: block !important; }
+      #printArea { display: block !important; }
     }
 
-    .field input {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      font-size: 1.1rem;
-      border: 2px solid var(--border);
-      border-radius: 10px;
-      background: #fafbfc;
-      color: var(--text);
-      transition: border-color 0.2s, box-shadow 0.2s;
-      outline: none;
-    }
-
-    .field input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-light);
-      background: #fff;
-    }
-
-    .field input.error {
-      border-color: var(--error);
-      background: var(--error-bg);
-    }
-
-    .field .hint {
-      font-size: 0.8rem;
-      color: var(--muted);
-      margin-top: 0.35rem;
-    }
-
-    .field .error-msg {
-      font-size: 0.8rem;
-      color: var(--error);
-      margin-top: 0.35rem;
-      display: none;
-    }
-
-    .field .error-msg.visible {
-      display: block;
-    }
-
-    .btn-calc {
-      width: 100%;
-      padding: 0.85rem 1.5rem;
-      font-size: 1rem;
-      font-weight: 600;
-      color: #fff;
-      background: var(--accent);
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
-      margin-bottom: 1.5rem;
-    }
-
-    .btn-calc:hover {
-      background: var(--accent-hover);
-    }
-
-    .btn-calc:active {
-      transform: scale(0.98);
-    }
-
-    .results {
-      display: none;
-    }
-
-    .results.visible {
-      display: block;
-    }
-
-    .results h2 {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      margin-bottom: 0.75rem;
-    }
-
-    .result-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 1.5rem;
-    }
-
-    .result-table th,
-    .result-table td {
-      padding: 0.65rem 0.75rem;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-      font-size: clamp(0.85rem, 2.5vw, 0.95rem);
-    }
-
-    .result-table th {
-      font-weight: 600;
-      color: var(--muted);
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-    }
-
-    .result-table td.label {
-      font-weight: 600;
-      white-space: nowrap;
-      width: 80px;
-    }
-
-    .copy-cell {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.4rem;
-    }
-
-    .copy-cell .copy-value {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .copy-btn {
-      flex-shrink: 0;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 28px;
-      height: 28px;
-      padding: 0;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: #fff;
-      color: var(--muted);
-      cursor: pointer;
-      transition: color 0.2s, border-color 0.2s, background 0.2s;
-    }
-
-    .copy-btn:hover {
-      color: var(--accent);
-      border-color: var(--accent);
-      background: var(--accent-light);
-    }
-
-    .copy-btn.copied {
-      color: #2d8a4e;
-      border-color: #2d8a4e;
-      background: #edf7f0;
-    }
-
-    .result-table td.digits .copy-value {
-      font-variant-numeric: tabular-nums;
-      font-family: "SF Mono", "Cascadia Code", "Consolas", monospace;
-      white-space: nowrap;
-    }
-
-    .result-table td.words .copy-value {
-      color: var(--text);
-    }
-
-    @media (max-width: 600px) {
-      .result-table thead {
-        display: none;
-      }
-
-      .result-table tr {
-        display: block;
-        margin-bottom: 1rem;
-        padding-bottom: 0.75rem;
-        border-bottom: 1px solid var(--border);
-      }
-
-      .result-table td {
-        display: block;
-        border: none;
-        padding: 0.2rem 0;
-      }
-
-      .result-table td.label {
-        font-size: 0.9rem;
-        margin-bottom: 0.25rem;
-      }
-
-      .result-table td.digits .copy-cell::before {
-        content: "Цифры: ";
-        display: block;
-        color: var(--muted);
-        font-family: inherit;
-        font-size: 0.75rem;
-        margin-bottom: 0.15rem;
-      }
-
-      .result-table td.words .copy-cell::before {
-        content: "Прописью: ";
-        display: block;
-        color: var(--muted);
-        font-size: 0.75rem;
-        margin-bottom: 0.15rem;
-      }
-
-      .copy-cell {
-        flex-wrap: wrap;
-      }
-    }
-
-    .template-block {
-      background: var(--accent-light);
-      border: 1px solid rgba(59, 111, 212, 0.15);
-      border-radius: 10px;
-      padding: 1rem 1.25rem;
-      margin-top: 0.5rem;
-    }
-
-    .block-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.75rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .block-header h2 {
-      margin-bottom: 0;
-    }
-
-    .template-text {
-      font-size: clamp(0.9rem, 2.5vw, 1rem);
-      line-height: 1.6;
-    }
-
+    #printArea { display: none; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Сумма прописью с НДС</h1>
-      <p>Перевод денежных сумм в текст на русском языке с учётом НДС</p>
+  <main class="app">
+    <header class="app-header no-print">
+      <div class="app-header__main">
+        <h1 class="app-header__title">Сумма прописью с НДС</h1>
+        <p class="app-header__desc">Калькулятор НДС и перевод сумм — с экспортом в Excel</p>
+      </div>
+      <div class="toolbar">
+        <button type="button" class="btn btn--sm" id="btnPrint">Печать</button>
+        <button type="button" class="btn btn--sm" id="btnShare">Поделиться</button>
+      </div>
     </header>
 
-    <div class="card">
-      <form id="calcForm" novalidate>
-        <div class="form-grid">
-          <div class="field">
-            <label for="amount">Сумма (без НДС)</label>
-            <input type="text" id="amount" name="amount" placeholder="100.00" inputmode="decimal" autocomplete="off">
-            <div class="hint">Можно вводить через точку или запятую</div>
-            <div class="error-msg" id="amountError">Введите корректную сумму</div>
+    <section class="panel no-print">
+      <div class="panel__body">
+        <nav class="tabs" role="tablist">
+          <button type="button" class="tab tab--active" data-mode="calc" role="tab" aria-selected="true">Калькулятор</button>
+          <button type="button" class="tab" data-mode="words" role="tab">Прописью</button>
+          <button type="button" class="tab" data-mode="batch" role="tab">Excel</button>
+          <button type="button" class="tab" data-mode="invoice" role="tab">Таблица</button>
+          <button type="button" class="tab" data-mode="builder" role="tab">Конструктор</button>
+        </nav>
+      </div>
+    </section>
+
+    <!-- CALC MODE -->
+    <section class="panel mode-panel mode-panel--active no-print" id="panelCalc" data-mode="calc">
+      <div class="panel__header"><h2 class="panel__title">Параметры расчёта</h2></div>
+      <div class="panel__body">
+        <div class="alert alert--warning" id="amountWarning"></div>
+        <form id="calcForm" novalidate>
+          <div class="mode-switch" role="radiogroup" aria-label="Режим расчёта">
+            <label class="mode-switch__option"><input type="radio" name="calcMode" value="base" checked> Знаю сумму без НДС</label>
+            <label class="mode-switch__option"><input type="radio" name="calcMode" value="total"> Знаю итого с НДС</label>
           </div>
-          <div class="field">
-            <label for="vat">НДС, %</label>
-            <input type="text" id="vat" name="vat" value="22" inputmode="decimal" autocomplete="off">
-            <div class="hint">0–100</div>
-            <div class="error-msg" id="vatError">Введите процент от 0 до 100</div>
+          <div class="form-grid">
+            <div class="field">
+              <label class="field__label" for="amount" id="amountLabel">Сумма (без НДС)</label>
+              <div class="input-wrap">
+                <input class="input-wrap__field" type="text" id="amount" placeholder="100,00" inputmode="decimal" autocomplete="off">
+                <span class="input-wrap__suffix">₽</span>
+              </div>
+              <span class="field__hint">Точка или запятая</span>
+              <span class="field__error" id="amountError">Введите корректную сумму</span>
+            </div>
+            <div class="field">
+              <label class="field__label" for="vat">НДС</label>
+              <div class="input-wrap">
+                <input class="input-wrap__field" type="text" id="vat" value="22" inputmode="decimal" autocomplete="off">
+                <span class="input-wrap__suffix">%</span>
+              </div>
+              <div class="vat-presets" id="vatPresets"></div>
+              <div class="vat-add">
+                <input type="text" id="customVatInput" placeholder="Своя ставка" inputmode="decimal">
+                <button type="button" class="btn btn--sm" id="addVatBtn">+ Добавить</button>
+              </div>
+              <span class="field__error" id="vatError">Введите процент от 0 до 100</span>
+            </div>
+          </div>
+
+          <details class="settings-details">
+            <summary>⚙ Дополнительные настройки</summary>
+            <div class="settings-grid">
+              <div class="field">
+                <label class="field__label" for="templateSelect">Шаблон</label>
+                <select class="field__select" id="templateSelect"></select>
+              </div>
+              <div class="field">
+                <label class="field__label" for="rounding">Округление НДС</label>
+                <select class="field__select" id="rounding">
+                  <option value="math">Математическое</option>
+                  <option value="floor">В меньшую сторону</option>
+                  <option value="ceil">В большую сторону</option>
+                </select>
+              </div>
+            </div>
+          </details>
+        </form>
+      </div>
+    </section>
+
+    <!-- WORDS MODE -->
+    <section class="panel mode-panel no-print" id="panelWords" data-mode="words">
+      <div class="panel__header"><h2 class="panel__title">Сумма прописью</h2></div>
+      <div class="panel__body">
+        <div class="toggle-row" style="margin-bottom:1rem">
+          <div>
+            <div class="toggle-row__text">Только число</div>
+            <div class="toggle-row__sub">Без «рублей» и «копеек»</div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="wordsNumbersOnly"><span class="toggle__slider"></span></label>
+        </div>
+        <div class="field">
+          <label class="field__label" for="wordsAmount">Сумма</label>
+          <div class="input-wrap">
+            <input class="input-wrap__field" type="text" id="wordsAmount" placeholder="100,00" inputmode="decimal">
+            <span class="input-wrap__suffix">₽</span>
           </div>
         </div>
-        <button type="submit" class="btn-calc">Рассчитать</button>
-      </form>
-
-      <div class="results" id="results">
-        <h2>Результат</h2>
-        <table class="result-table">
-          <thead>
-            <tr>
-              <th></th>
-              <th>Цифры</th>
-              <th>Прописью</th>
-            </tr>
-          </thead>
-          <tbody id="resultBody"></tbody>
-        </table>
-
-        <div class="template-block">
-          <div class="block-header">
-            <h2>Шаблонная строка</h2>
-            <button type="button" class="copy-btn" id="copyTemplateBtn" aria-label="Копировать шаблонную строку" title="Копировать">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            </button>
+        <div class="template-panel" style="margin-top:1rem" id="wordsResult" hidden>
+          <p class="template-panel__text" id="wordsResultText"></p>
+          <div style="margin-top:.75rem">
+            <button type="button" class="btn btn--sm" id="copyWordsBtn">Копировать</button>
           </div>
-          <p class="template-text" id="templateText"></p>
         </div>
       </div>
-    </div>
-  </div>
+    </section>
+
+    <!-- EXCEL / BATCH MODE -->
+    <section class="panel mode-panel no-print" id="panelBatch" data-mode="batch">
+      <div class="panel__header"><h2 class="panel__title">Таблица из Excel</h2></div>
+      <div class="panel__body">
+        <div class="excel-hint">
+          <div>
+            <strong>Как работать с Excel</strong><br>
+            Скопируйте столбец с суммами в Excel (Ctrl+C) и вставьте сюда (Ctrl+V).
+            Результат можно вставить обратно в Excel — кнопка «Копировать для Excel».
+          </div>
+        </div>
+        <div class="batch-options">
+          <div class="field">
+            <label class="field__label" for="batchVat">НДС для строк, %</label>
+            <input class="input-wrap__field" type="text" id="batchVat" value="22" inputmode="decimal" style="padding-right:0.9rem">
+          </div>
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-row__text">Считать НДС</div>
+              <div class="toggle-row__sub">Добавить колонки НДС и итого</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="batchWithVat" checked><span class="toggle__slider"></span></label>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field__label" for="batchInput">Данные из Excel</label>
+          <textarea class="field__textarea" id="batchInput" placeholder="100&#10;250,50&#10;1 000,00"></textarea>
+          <span class="field__hint">Одна сумма на строку или столбец из Excel (Tab между ячейками)</span>
+        </div>
+        <div class="batch-table-wrap" id="batchTableWrap" hidden>
+          <table class="batch-table" id="batchTable">
+            <thead id="batchTableHead"></thead>
+            <tbody id="batchTableBody"></tbody>
+          </table>
+        </div>
+        <div class="batch-toolbar" id="batchToolbar" hidden>
+          <button type="button" class="btn btn--sm btn--excel" id="copyBatchExcelBtn">Копировать для Excel</button>
+          <button type="button" class="btn btn--sm btn--excel" id="exportBatchCsvBtn">Скачать CSV</button>
+          <button type="button" class="btn btn--sm" id="copyBatchBtn">Копировать текст</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TABLE MODE -->
+    <section class="panel mode-panel no-print" id="panelInvoice" data-mode="invoice">
+      <div class="panel__header"><h2 class="panel__title">Таблица</h2></div>
+      <div class="panel__body">
+        <div class="excel-hint">
+          <div><strong>Вставьте столбец сумм из Excel</strong> — скопируйте ячейки (Ctrl+C) и вставьте в поле ниже (Ctrl+V). Результат можно скопировать обратно в Excel.</div>
+        </div>
+
+        <div class="table-quick-row">
+          <div class="field">
+            <label class="field__label" for="invoiceVat">НДС, %</label>
+            <input class="field__inline-input" type="text" id="invoiceVat" value="22" inputmode="decimal">
+          </div>
+          <label class="toggle-compact">
+            <input type="checkbox" id="invoiceInclusive"> Суммы уже с НДС
+          </label>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="tableInput">Суммы</label>
+          <textarea class="field__textarea" id="tableInput" placeholder="100&#10;250,50&#10;1 000,00" rows="6"></textarea>
+        </div>
+
+        <details class="table-columns-details">
+          <summary>Колонки в таблице</summary>
+          <p class="field__hint">Перетащите для порядка · нажмите на название, чтобы скрыть или показать</p>
+          <ul class="column-order" id="tableColumnList"></ul>
+          <button type="button" class="btn btn--sm" id="columnReset" style="margin-top:var(--space-2)">Сбросить</button>
+        </details>
+
+        <div class="batch-table-wrap" id="tableWrap" hidden>
+          <table class="batch-table" id="invoiceTable">
+            <thead id="invoiceHead"></thead>
+            <tbody id="invoiceBody"></tbody>
+          </table>
+        </div>
+
+        <div class="batch-toolbar" id="invoiceToolbar" hidden>
+          <button type="button" class="btn btn--sm btn--excel" id="invoiceCopyExcel">Копировать для Excel</button>
+          <button type="button" class="btn btn--sm btn--excel" id="invoiceExportCsv">Скачать CSV</button>
+        </div>
+
+        <div class="table-total-bar" id="invoiceTotals" hidden>
+          <span class="table-total-bar__main" id="invoiceTotalSum">—</span>
+          <span class="table-total-bar__words" id="invoiceTotalWords"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- BUILDER MODE -->
+    <section class="panel mode-panel no-print" id="panelBuilder" data-mode="builder">
+      <div class="panel__header"><h2 class="panel__title">Конструктор шаблонов</h2></div>
+      <div class="panel__body">
+        <div class="field" style="margin-bottom:var(--space-4)">
+          <label class="field__label" for="builderTemplateSelect">Шаблон</label>
+          <select class="field__select" id="builderTemplateSelect"></select>
+        </div>
+        <p class="field__hint" style="margin-bottom:var(--space-2)">Клик по токену — вставка в шаблон:</p>
+        <div class="token-bar" id="tokenBar"></div>
+        <div class="builder-split">
+          <div class="field">
+            <label class="field__label" for="builderText">Текст шаблона</label>
+            <textarea class="field__textarea" id="builderText" rows="6" spellcheck="false"></textarea>
+            <span class="field__hint">Токены: {база_цифры}, {база_прописью}, {база_кратко}, {ндс_*}, {итого_*}, {ставка_ндс}</span>
+          </div>
+          <div>
+            <div class="field__label" style="margin-bottom:var(--space-2)">Превью (100 ₽, НДС 22%)</div>
+            <div class="builder-preview" id="builderPreview"></div>
+          </div>
+        </div>
+        <div style="margin-top:var(--space-4);display:flex;gap:var(--space-2);flex-wrap:wrap">
+          <button type="button" class="btn btn--sm btn--primary" id="builderSave">Сохранить шаблон</button>
+          <button type="button" class="btn btn--sm" id="builderCopy">Копировать</button>
+          <button type="button" class="btn btn--sm" id="builderApply">Применить к калькулятору</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESULTS -->
+    <section class="results" id="results" aria-live="polite">
+      <div class="panel">
+        <div class="panel__header">
+          <h2 class="panel__title">Расчёт</h2>
+          <div class="toolbar no-print" id="resultsToolbar">
+            <div class="toolbar-group">
+              <span class="toolbar-group__label">Текст</span>
+              <button type="button" class="btn btn--sm btn--primary" id="copyAllBtn">Копировать всё</button>
+              <button type="button" class="btn btn--sm" id="exportTxtBtn">.txt</button>
+            </div>
+            <div class="toolbar-group">
+              <span class="toolbar-group__label">Excel</span>
+              <button type="button" class="btn btn--sm btn--excel" id="copyExcelBtn">Копировать таблицу</button>
+              <button type="button" class="btn btn--sm btn--excel" id="exportCsvBtn">Скачать CSV</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel__body panel__body--compact">
+          <table class="result-table">
+            <thead><tr><th></th><th>Цифры</th><th>Прописью</th></tr></thead>
+            <tbody id="resultBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="template-panel">
+        <div class="template-panel__header">
+          <h2 class="template-panel__title">Шаблонная строка</h2>
+          <button type="button" class="btn-icon no-print" id="copyTemplateBtn" title="Копировать">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+        </div>
+        <p class="template-panel__text" id="templateText"></p>
+        <div class="share-box no-print" id="shareBox">
+          <div class="share-box__link">
+            <input type="text" id="shareUrl" readonly>
+            <button type="button" class="btn btn--sm" id="copyUrlBtn">Ссылка</button>
+          </div>
+          <div class="share-box__qr" id="qrBox" hidden>
+            <img id="qrImg" width="120" height="120" alt="QR-код">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel no-print" id="historyPanel">
+      <div class="panel__header">
+        <h2 class="panel__title">История</h2>
+        <button type="button" class="btn btn--sm" id="clearHistoryBtn">Очистить</button>
+      </div>
+      <div class="panel__body panel__body--compact">
+        <div class="history-list" id="historyList"></div>
+      </div>
+    </section>
+
+    <div id="printArea"></div>
+    <div class="toast" id="toast"></div>
+  </main>
 
   <script>
-    const ONES_M = ['', 'один', 'два', 'три', 'четыре', 'пять', 'шесть', 'семь', 'восемь', 'девять'];
-    const ONES_F = ['', 'одна', 'две', 'три', 'четыре', 'пять', 'шесть', 'семь', 'восемь', 'девять'];
-    const TEENS = ['десять', 'одиннадцать', 'двенадцать', 'тринадцать', 'четырнадцать',
-      'пятнадцать', 'шестнадцать', 'семнадцать', 'восемнадцать', 'девятнадцать'];
-    const TENS = ['', '', 'двадцать', 'тридцать', 'сорок', 'пятьдесят',
-      'шестьдесят', 'семьдесят', 'восемьдесят', 'девяносто'];
-    const HUNDREDS = ['', 'сто', 'двести', 'триста', 'четыреста', 'пятьсот',
-      'шестьсот', 'семьсот', 'восемьсот', 'девятьсот'];
+  (function () {
+    'use strict';
 
-    const SCALES = [
-      ['', '', '', 'm'],
-      ['тысяча', 'тысячи', 'тысяч', 'f'],
-      ['миллион', 'миллиона', 'миллионов', 'm'],
-      ['миллиард', 'миллиарда', 'миллиардов', 'm'],
-      ['триллион', 'триллиона', 'триллионов', 'm'],
+    var STORAGE = { history: 'nds_history', customVats: 'nds_custom_vats', settings: 'nds_settings', customTemplates: 'nds_custom_templates', tableColumns: 'nds_table_columns' };
+    var DEFAULT_VATS = [0, 10, 20, 22];
+    var COPY_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+
+    var TEMPLATE_PRESETS = {
+      besides: { name: 'Кроме того НДС', text: '{база_кратко}, кроме того НДС {ставка_ндс}% — {ндс_кратко}, итого {итого_кратко}' },
+      including: { name: 'В том числе НДС', text: '{итого_кратко}, в том числе НДС {ставка_ндс}% — {ндс_кратко}' },
+      no_vat: { name: 'Без НДС', text: '{база_кратко}, без НДС (НДС не облагается)' },
+      simple: { name: 'Только итог', text: '{итого_кратко}' }
+    };
+
+    var TEMPLATE_TOKENS = [
+      '{база_цифры}', '{база_прописью}', '{база_кратко}',
+      '{ндс_цифры}', '{ндс_прописью}', '{ндс_кратко}',
+      '{итого_цифры}', '{итого_прописью}', '{итого_кратко}',
+      '{ставка_ндс}'
     ];
 
+    var TABLE_COLUMN_DEFS = {
+      num: { label: '№' },
+      name: { label: 'Наименование', edit: 'name' },
+      base_digits: { label: 'Сумма', edit: 'amount', num: true },
+      base_words: { label: 'Сумма прописью', words: true },
+      vat_digits: { label: 'НДС', num: true },
+      vat_words: { label: 'НДС прописью', words: true },
+      total_digits: { label: 'Итого', num: true },
+      total_words: { label: 'Итого прописью', words: true },
+      template: { label: 'Формулировка', wide: true },
+      actions: { label: '' }
+    };
+
+    var DEFAULT_COLUMNS = [
+      { id: 'num', visible: true },
+      { id: 'name', visible: false },
+      { id: 'base_digits', visible: true },
+      { id: 'vat_digits', visible: true },
+      { id: 'total_digits', visible: true },
+      { id: 'base_words', visible: false },
+      { id: 'vat_words', visible: false },
+      { id: 'total_words', visible: true },
+      { id: 'template', visible: false },
+      { id: 'actions', visible: false }
+    ];
+
+    var ONES_M = ['','один','два','три','четыре','пять','шесть','семь','восемь','девять'];
+    var ONES_F = ['','одна','две','три','четыре','пять','шесть','семь','восемь','девять'];
+    var TEENS = ['десять','одиннадцать','двенадцать','тринадцать','четырнадцать','пятнадцать','шестнадцать','семнадцать','восемнадцать','девятнадцать'];
+    var TENS = ['','','двадцать','тридцать','сорок','пятьдесят','шестьдесят','семьдесят','восемьдесят','девяносто'];
+    var HUNDREDS = ['','сто','двести','триста','четыреста','пятьсот','шестьсот','семьсот','восемьсот','девятьсот'];
+    var SCALES = [['','','','m'],['тысяча','тысячи','тысяч','f'],['миллион','миллиона','миллионов','m'],['миллиард','миллиарда','миллиардов','m'],['триллион','триллиона','триллионов','m']];
+
+    var state = { lastResult: null, currentMode: 'calc', selectedTemplateId: 'besides', tableExport: null, dragColId: null };
+    var debounceTimer = null;
+
+    var $ = function (id) { return document.getElementById(id); };
+
+    // ── Number to words ──
     function decline(n, forms) {
-      const abs = Math.abs(n) % 100;
-      const last = abs % 10;
+      var abs = Math.abs(n) % 100, last = abs % 10;
       if (abs >= 11 && abs <= 14) return forms[2];
       if (last === 1) return forms[0];
       if (last >= 2 && last <= 4) return forms[1];
@@ -394,301 +691,1029 @@
 
     function tripletToWords(n, gender) {
       if (n === 0) return '';
-      const parts = [];
-      const h = Math.floor(n / 100);
-      const remainder = n % 100;
-      const t = Math.floor(remainder / 10);
-      const o = remainder % 10;
-
+      var parts = [], h = Math.floor(n / 100), rem = n % 100, t = Math.floor(rem / 10), o = rem % 10;
       if (h > 0) parts.push(HUNDREDS[h]);
-
-      if (remainder >= 10 && remainder <= 19) {
-        parts.push(TEENS[remainder - 10]);
-      } else {
-        if (t > 0) parts.push(TENS[t]);
-        if (o > 0) {
-          parts.push(gender === 'f' ? ONES_F[o] : ONES_M[o]);
-        }
-      }
-
+      if (rem >= 10 && rem <= 19) parts.push(TEENS[rem - 10]);
+      else { if (t > 0) parts.push(TENS[t]); if (o > 0) parts.push(gender === 'f' ? ONES_F[o] : ONES_M[o]); }
       return parts.join(' ');
     }
 
     function numberToWords(n, unitGender) {
       if (n === 0) return 'ноль';
-
-      const parts = [];
-      let scaleIndex = 0;
-
+      var parts = [], scaleIndex = 0;
       while (n > 0) {
-        const triplet = n % 1000;
+        var triplet = n % 1000;
         if (triplet > 0) {
-          const scale = SCALES[scaleIndex];
-          const gender = scaleIndex === 0 && unitGender ? unitGender : scale[3];
-          const words = tripletToWords(triplet, gender);
-          if (scaleIndex > 0) {
-            parts.unshift(words + ' ' + decline(triplet, [scale[0], scale[1], scale[2]]));
-          } else {
-            parts.unshift(words);
-          }
+          var scale = SCALES[scaleIndex];
+          var gender = scaleIndex === 0 && unitGender ? unitGender : scale[3];
+          var words = tripletToWords(triplet, gender);
+          parts.unshift(scaleIndex > 0 ? words + ' ' + decline(triplet, [scale[0], scale[1], scale[2]]) : words);
         }
-        n = Math.floor(n / 1000);
-        scaleIndex++;
+        n = Math.floor(n / 1000); scaleIndex++;
       }
-
       return parts.join(' ').trim();
     }
 
     function parseAmount(str) {
       if (!str || !str.trim()) return null;
-      const normalized = str.trim().replace(/\s/g, '').replace(',', '.');
-      if (!/^\d+(\.\d{0,2})?$/.test(normalized)) return null;
-      const value = parseFloat(normalized);
+      var norm = str.trim().replace(/\s/g, '').replace(',', '.');
+      if (!/^\d+(\.\d{0,2})?$/.test(norm)) return null;
+      var value = parseFloat(norm);
       if (isNaN(value) || value < 0) return null;
-      const cents = Math.round(value * 100);
-      return {
-        rubles: Math.floor(cents / 100),
-        kopecks: cents % 100,
-        cents,
-      };
+      var cents = Math.round(value * 100);
+      return { rubles: Math.floor(cents / 100), kopecks: cents % 100, cents: cents, value: value };
     }
 
     function parseVat(str) {
       if (!str || !str.trim()) return 0;
-      const normalized = str.trim().replace(',', '.');
-      if (!/^\d+(\.\d+)?$/.test(normalized)) return null;
-      const value = parseFloat(normalized);
+      var norm = str.trim().replace(',', '.');
+      if (!/^\d+(\.\d+)?$/.test(norm)) return null;
+      var value = parseFloat(norm);
       if (isNaN(value) || value < 0 || value > 100) return null;
       return value;
     }
 
     function formatDigits(rubles, kopecks) {
-      const value = rubles + kopecks / 100;
-      return value.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return (rubles + kopecks / 100).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function digitsPlain(rubles, kopecks) {
+      return formatDigits(rubles, kopecks).replace(/[\s\u00a0\u202f]/g, '');
     }
 
     function amountToMoneyText(rubles, kopecks) {
-      const kopecksNum = String(kopecks).padStart(2, '0');
-      const rublesWords = numberToWords(rubles);
-      const rublesUnit = decline(rubles, ['рубль', 'рубля', 'рублей']);
-      const kopecksUnit = decline(kopecks, ['копейка', 'копейки', 'копеек']);
+      var kn = String(kopecks).padStart(2, '0');
+      var rw = numberToWords(rubles), ru = decline(rubles, ['рубль','рубля','рублей']);
+      var kw = kopecks === 0 ? '00 копеек' : numberToWords(kopecks, 'f') + ' ' + decline(kopecks, ['копейка','копейки','копеек']);
+      return {
+        fullText: rw + ' ' + ru + ' ' + kw,
+        digits: formatDigits(rubles, kopecks),
+        digitsPlain: digitsPlain(rubles, kopecks),
+        shortWithSpace: rubles.toLocaleString('ru-RU') + ' (' + rw + ') ' + ru + ' ' + kn + ' копеек'
+      };
+    }
 
-      let kopecksWordsPart;
-      if (kopecks === 0) {
-        kopecksWordsPart = '00 копеек';
+    function amountToNumberText(rubles, kopecks) {
+      var rw = numberToWords(rubles);
+      if (kopecks === 0) return rw;
+      return rw + ' ' + numberToWords(kopecks, 'f');
+    }
+
+    function applyRounding(cents, mode) {
+      if (mode === 'floor') return Math.floor(cents);
+      if (mode === 'ceil') return Math.ceil(cents);
+      return Math.round(cents);
+    }
+
+    function calcAmounts(inputCents, vatPercent, inclusive, rounding) {
+      var baseCents, vatCents, totalCents;
+      if (inclusive && vatPercent > 0) {
+        totalCents = inputCents;
+        vatCents = applyRounding(inputCents * vatPercent / (100 + vatPercent), rounding);
+        baseCents = inputCents - vatCents;
       } else {
-        kopecksWordsPart = numberToWords(kopecks, 'f') + ' ' + kopecksUnit;
+        baseCents = inputCents;
+        vatCents = vatPercent > 0 ? applyRounding(inputCents * vatPercent / 100, rounding) : 0;
+        totalCents = baseCents + vatCents;
       }
-
-      const fullText = rublesWords + ' ' + rublesUnit + ' ' + kopecksWordsPart;
-      const digits = formatDigits(rubles, kopecks);
-
-      return {
-        rublesNum: rubles.toLocaleString('ru-RU'),
-        kopecksNum,
-        rublesWords,
-        fullText,
-        digits,
-        shortWithSpace: rubles.toLocaleString('ru-RU') + ' (' + rublesWords + ') ' + rublesUnit + ' ' + kopecksNum + ' копеек',
-      };
+      return { baseCents: baseCents, vatCents: vatCents, totalCents: totalCents };
     }
 
-    function calcVatAmount(baseCents, vatPercent) {
-      return Math.round(baseCents * vatPercent / 100);
-    }
-
-    function centsToParts(cents) {
-      const absCents = Math.abs(cents);
-      return {
-        rubles: Math.floor(absCents / 100),
-        kopecks: absCents % 100,
-      };
-    }
-
-    function buildTemplate(base, vat, total, vatPercent) {
-      let template = base.shortWithSpace;
-
-      if (vatPercent > 0) {
-        template += ', кроме того НДС ' + formatVatPercent(vatPercent) + '% - ' +
-          vat.shortWithSpace + ', итого ' + total.shortWithSpace;
-      }
-
-      return template;
+    function centsToParts(c) {
+      var a = Math.abs(c);
+      return { rubles: Math.floor(a / 100), kopecks: a % 100 };
     }
 
     function formatVatPercent(p) {
       return Number.isInteger(p) ? String(p) : String(p).replace('.', ',');
     }
 
-    const COPY_BTN_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
-
-    function copyCell(value, label) {
-      return '<div class="copy-cell">' +
-        '<span class="copy-value">' + escapeHtml(value) + '</span>' +
-        '<button type="button" class="copy-btn" aria-label="' + escapeHtml(label) + '" title="Копировать">' +
-        COPY_BTN_SVG +
-        '</button></div>';
+    function buildTemplateContext(base, vat, total, vatPercent) {
+      return {
+        '{база_цифры}': base.digitsPlain,
+        '{база_прописью}': base.fullText,
+        '{база_кратко}': base.shortWithSpace,
+        '{ндс_цифры}': vat.digitsPlain,
+        '{ндс_прописью}': vat.fullText,
+        '{ндс_кратко}': vat.shortWithSpace,
+        '{итого_цифры}': total.digitsPlain,
+        '{итого_прописью}': total.fullText,
+        '{итого_кратко}': total.shortWithSpace,
+        '{ставка_ндс}': formatVatPercent(vatPercent)
+      };
     }
 
-    function escapeHtml(str) {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+    function renderTemplate(template, ctx) {
+      var result = template;
+      Object.keys(ctx).forEach(function (token) {
+        result = result.split(token).join(ctx[token]);
+      });
+      return result;
+    }
+
+    function getCustomTemplates() { return loadJSON(STORAGE.customTemplates, []); }
+    function saveCustomTemplates(list) { saveJSON(STORAGE.customTemplates, list); }
+
+    function getTemplateById(id) {
+      if (TEMPLATE_PRESETS[id]) return { id: id, name: TEMPLATE_PRESETS[id].name, text: TEMPLATE_PRESETS[id].text, preset: true };
+      var custom = getCustomTemplates().find(function (t) { return t.id === id; });
+      return custom ? { id: custom.id, name: custom.name, text: custom.text, preset: false } : null;
+    }
+
+    function getSelectedTemplateId() {
+      return $('templateSelect').value || state.selectedTemplateId || 'besides';
+    }
+
+    function getTemplateText(id) {
+      var t = getTemplateById(id);
+      return t ? t.text : TEMPLATE_PRESETS.besides.text;
+    }
+
+    function populateTemplateSelects(selectedId) {
+      var html = '';
+      Object.keys(TEMPLATE_PRESETS).forEach(function (id) {
+        html += '<option value="' + id + '">' + escapeHtml(TEMPLATE_PRESETS[id].name) + '</option>';
+      });
+      var custom = getCustomTemplates();
+      if (custom.length) {
+        html += '<optgroup label="Мои шаблоны">';
+        custom.forEach(function (t) {
+          html += '<option value="' + escapeHtml(t.id) + '">' + escapeHtml(t.name) + '</option>';
+        });
+        html += '</optgroup>';
+      }
+      ['templateSelect', 'builderTemplateSelect'].forEach(function (selId) {
+        var sel = $(selId);
+        if (!sel) return;
+        sel.innerHTML = html;
+        if (selectedId) sel.value = selectedId;
+      });
+    }
+
+    function getColumnConfig() {
+      var saved = loadJSON(STORAGE.tableColumns, null);
+      var base = (!saved || !saved.length) ? DEFAULT_COLUMNS.slice() : saved;
+      var known = Object.keys(TABLE_COLUMN_DEFS);
+      var ordered = [];
+      base.forEach(function (c) {
+        if (known.indexOf(c.id) >= 0 && !ordered.some(function (x) { return x.id === c.id; })) ordered.push(c);
+      });
+      known.forEach(function (id) {
+        if (!ordered.some(function (c) { return c.id === id; })) {
+          var d = DEFAULT_COLUMNS.find(function (c) { return c.id === id; });
+          ordered.push({ id: id, visible: d ? d.visible : false });
+        }
+      });
+      return ordered.map(function (c) {
+        if (c.id === 'name' || c.id === 'actions') return { id: c.id, visible: false };
+        var d = DEFAULT_COLUMNS.find(function (x) { return x.id === c.id; });
+        return { id: c.id, visible: c.visible !== undefined ? !!c.visible : (d ? d.visible : true) };
+      });
+    }
+
+    function saveColumnConfig(cols) {
+      saveJSON(STORAGE.tableColumns, cols);
+    }
+
+    function getVisibleColumns() {
+      return getColumnConfig().filter(function (c) { return c.visible && c.id !== 'actions'; });
+    }
+
+    function getExportColumns() {
+      return getColumnConfig().filter(function (c) {
+        return c.visible && c.id !== 'actions';
+      });
+    }
+
+    function cellValueFromRow(row, colId) {
+      if (colId === 'num') return String(row.index);
+      if (colId === 'name') return '';
+      if (colId === 'base_digits') return row.base ? row.base.digitsPlain : '';
+      if (colId === 'base_words') return row.base ? row.base.fullText : '';
+      if (colId === 'vat_digits') return row.vat && row.vatPct > 0 ? row.vat.digitsPlain : '';
+      if (colId === 'vat_words') return row.vat && row.vatPct > 0 ? row.vat.fullText : '';
+      if (colId === 'total_digits') return row.total ? row.total.digitsPlain : '';
+      if (colId === 'total_words') return row.total ? row.total.fullText : '';
+      if (colId === 'template') return row.template || '';
+      return '';
+    }
+
+    function buildExportFromRows(rows, cols) {
+      var headers = cols.map(function (c) { return TABLE_COLUMN_DEFS[c.id].label; });
+      var tsv = [headers.join('\t')], csv = [headers.join(';')];
+      rows.forEach(function (row) {
+        var cells = cols.map(function (c) { return cellValueFromRow(row, c.id); });
+        tsv.push(cells.join('\t'));
+        csv.push(cells.map(escapeCsvCell).join(';'));
+      });
+      return { tsv: tsv.join('\n'), csv: '\ufeff' + csv.join('\r\n') };
+    }
+
+    function renderTableColumnList() {
+      var list = $('tableColumnList');
+      if (!list) return;
+      var cols = getColumnConfig().filter(function (c) { return c.id !== 'name' && c.id !== 'actions'; });
+      list.innerHTML = cols.map(function (col) {
+        return '<li class="column-order__item' + (col.visible ? '' : ' column-order__item--hidden') +
+          '" draggable="true" data-col-id="' + col.id + '">' +
+          '<span class="column-order__handle" aria-hidden="true">⋮⋮</span>' +
+          '<button type="button" class="column-order__chip' + (col.visible ? ' column-order__chip--on' : '') +
+          '" data-col-toggle="' + col.id + '">' + escapeHtml(TABLE_COLUMN_DEFS[col.id].label) + '</button></li>';
+      }).join('');
+      setupTableColumnDrag(list);
+      list.querySelectorAll('[data-col-toggle]').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var cols = getColumnConfig();
+          var col = cols.find(function (c) { return c.id === btn.dataset.colToggle; });
+          if (!col || col.id === 'num') return;
+          col.visible = !col.visible;
+          saveColumnConfig(cols);
+          renderTableColumnList();
+          calcTable();
+        });
+      });
+    }
+
+    function setupTableColumnDrag(list) {
+      list.querySelectorAll('.column-order__item').forEach(function (item) {
+        item.addEventListener('dragstart', function (e) {
+          state.dragColId = item.dataset.colId;
+          item.classList.add('column-order__item--dragging');
+          e.dataTransfer.effectAllowed = 'move';
+        });
+        item.addEventListener('dragend', function () {
+          item.classList.remove('column-order__item--dragging');
+          list.querySelectorAll('.column-order__item--over').forEach(function (el) { el.classList.remove('column-order__item--over'); });
+          state.dragColId = null;
+        });
+        item.addEventListener('dragover', function (e) {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          if (item.dataset.colId !== state.dragColId) item.classList.add('column-order__item--over');
+        });
+        item.addEventListener('dragleave', function () { item.classList.remove('column-order__item--over'); });
+        item.addEventListener('drop', function (e) {
+          e.preventDefault();
+          item.classList.remove('column-order__item--over');
+          var fromId = state.dragColId;
+          var toId = item.dataset.colId;
+          if (!fromId || fromId === toId) return;
+          var cols = getColumnConfig();
+          var fromIdx = cols.findIndex(function (c) { return c.id === fromId; });
+          var toIdx = cols.findIndex(function (c) { return c.id === toId; });
+          if (fromIdx < 0 || toIdx < 0) return;
+          var moved = cols.splice(fromIdx, 1)[0];
+          cols.splice(toIdx, 0, moved);
+          saveColumnConfig(cols);
+          renderTableColumnList();
+          calcTable();
+        });
+      });
+    }
+
+    function computeRowDataFromAmount(amountStr, index, vatPct, inclusive, rounding, templateId) {
+      var a = parseAmount(amountStr);
+      if (!a) return { index: index + 1, valid: false, raw: amountStr };
+      var amts = calcAmounts(a.cents, vatPct, inclusive, rounding);
+      var base = amountToMoneyText(centsToParts(amts.baseCents).rubles, centsToParts(amts.baseCents).kopecks);
+      var vat = amountToMoneyText(centsToParts(amts.vatCents).rubles, centsToParts(amts.vatCents).kopecks);
+      var total = amountToMoneyText(centsToParts(amts.totalCents).rubles, centsToParts(amts.totalCents).kopecks);
+      return {
+        index: index + 1, valid: true, vatPct: vatPct,
+        base: base, vat: vat, total: total,
+        template: buildTemplateFromSelection(base, vat, total, vatPct, templateId, inclusive),
+        baseCents: amts.baseCents, vatCents: amts.vatCents, totalCents: amts.totalCents
+      };
+    }
+
+    function buildTemplateFromSelection(base, vat, total, vatPercent, templateId, inclusive) {
+      var text = getTemplateText(templateId);
+      if (vatPercent === 0 && templateId === 'besides') text = TEMPLATE_PRESETS.no_vat.text;
+      if (inclusive && templateId === 'besides') text = TEMPLATE_PRESETS.including.text;
+      return renderTemplate(text, buildTemplateContext(base, vat, total, vatPercent));
+    }
+
+    function buildTableRows(inclusive, vatPercent, base, vat, total) {
+      var rows = [];
+      if (inclusive) {
+        rows.push({ label: 'Итого', digits: total.digitsPlain, words: total.fullText });
+        if (vatPercent > 0) {
+          rows.push({ label: 'НДС ' + formatVatPercent(vatPercent) + '%', digits: vat.digitsPlain, words: vat.fullText });
+          rows.push({ label: 'Без НДС', digits: base.digitsPlain, words: base.fullText });
+        }
+      } else {
+        rows.push({ label: 'Сумма', digits: base.digitsPlain, words: base.fullText });
+        if (vatPercent > 0) {
+          rows.push({ label: 'НДС ' + formatVatPercent(vatPercent) + '%', digits: vat.digitsPlain, words: vat.fullText });
+        }
+        rows.push({ label: 'Итого', digits: total.digitsPlain, words: total.fullText });
+      }
+      return rows;
+    }
+
+    function rowsToTsv(rows) {
+      var lines = ['\tЦифры\tПрописью'];
+      rows.forEach(function (r) { lines.push(r.label + '\t' + r.digits + '\t' + r.words); });
+      return lines.join('\n');
+    }
+
+    function escapeCsvCell(s) {
+      s = String(s);
+      if (/[;"\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+      return s;
+    }
+
+    function rowsToCsv(rows) {
+      var sep = ';';
+      var lines = ['Строка' + sep + 'Цифры' + sep + 'Прописью'];
+      rows.forEach(function (r) {
+        lines.push(escapeCsvCell(r.label) + sep + escapeCsvCell(r.digits) + sep + escapeCsvCell(r.words));
+      });
+      return '\ufeff' + lines.join('\r\n');
+    }
+
+    function downloadFile(content, filename, mime) {
+      var blob = new Blob([content], { type: mime });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      showToast('Файл скачан');
+    }
+
+    function parseExcelInput(text) {
+      var rawLines = text.split(/\r?\n/).map(function (l) { return l.trim(); }).filter(Boolean);
+      var amounts = [];
+      rawLines.forEach(function (line) {
+        if (line.indexOf('\t') >= 0) {
+          var parts = line.split('\t');
+          amounts.push(parts[parts.length - 1].trim());
+        } else if (rawLines.length === 1 && /\s/.test(line)) {
+          line.split(/\s+/).forEach(function (part) { if (part.trim()) amounts.push(part.trim()); });
+        } else {
+          amounts.push(line);
+        }
+      });
+      return amounts;
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function copyCell(value, label, type, plain) {
+      var cls = type === 'digits' ? 'copy-cell__value copy-cell__value--digits' : 'copy-cell__value';
+      var dataPlain = plain ? ' data-plain="' + escapeHtml(plain) + '"' : '';
+      return '<div class="copy-cell"><span class="' + cls + '"' + dataPlain + '>' + escapeHtml(value) + '</span>' +
+        '<button type="button" class="btn-icon" aria-label="' + escapeHtml(label) + '" title="Копировать">' + COPY_SVG + '</button></div>';
+    }
+
+    function showToast(msg) {
+      var t = $('toast');
+      t.textContent = msg;
+      t.classList.add('toast--visible');
+      setTimeout(function () { t.classList.remove('toast--visible'); }, 2200);
     }
 
     function copyText(text, btn) {
-      function onSuccess() {
-        btn.classList.add('copied');
-        const prevTitle = btn.title;
-        btn.title = 'Скопировано';
-        setTimeout(function () {
-          btn.classList.remove('copied');
-          btn.title = prevTitle;
-        }, 1500);
+      function ok() {
+        if (btn) { btn.classList.add('btn-icon--copied'); setTimeout(function () { btn.classList.remove('btn-icon--copied'); }, 1500); }
+        showToast('Скопировано');
       }
-
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(onSuccess).catch(function () {
-          fallbackCopy(text, onSuccess);
+        navigator.clipboard.writeText(text).then(ok).catch(function () { fallbackCopy(text, ok); });
+      } else { fallbackCopy(text, ok); }
+    }
+
+    function fallbackCopy(text, cb) {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.cssText = 'position:fixed;left:-9999px';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); cb(); } finally { document.body.removeChild(ta); }
+    }
+
+    // ── Storage ──
+    function loadJSON(key, fallback) {
+      try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; }
+    }
+    function saveJSON(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {} }
+
+    function getCustomVats() { return loadJSON(STORAGE.customVats, []); }
+    function saveCustomVats(v) { saveJSON(STORAGE.customVats, v); }
+
+    function getAllVats() {
+      var custom = getCustomVats();
+      var all = DEFAULT_VATS.concat(custom);
+      return all.filter(function (v, i, a) { return a.indexOf(v) === i; }).sort(function (a, b) { return a - b; });
+    }
+
+    function renderVatPresets(active) {
+      var el = $('vatPresets');
+      var html = '<span class="vat-presets__label">Быстрый выбор:</span>';
+      getAllVats().forEach(function (v) {
+        var isCustom = DEFAULT_VATS.indexOf(v) === -1;
+        html += '<button type="button" class="chip' + (v === active ? ' chip--active' : '') +
+          (isCustom ? ' chip--custom' : '') + '" data-vat="' + v + '">' + formatVatPercent(v) + '%</button>';
+      });
+      el.innerHTML = html;
+      el.querySelectorAll('.chip').forEach(function (chip) {
+        chip.addEventListener('click', function () {
+          $('vat').value = chip.dataset.vat;
+          calculate();
         });
-      } else {
-        fallbackCopy(text, onSuccess);
+      });
+    }
+
+    function saveHistory(entry) {
+      var hist = loadJSON(STORAGE.history, []);
+      hist = hist.filter(function (h) { return h.key !== entry.key; });
+      hist.unshift(entry);
+      if (hist.length > 10) hist = hist.slice(0, 10);
+      saveJSON(STORAGE.history, hist);
+      renderHistory();
+    }
+
+    function renderHistory() {
+      var el = $('historyList');
+      var hist = loadJSON(STORAGE.history, []);
+      if (!hist.length) { el.innerHTML = '<div class="history-empty">История пуста</div>'; return; }
+      el.innerHTML = hist.map(function (h) {
+        return '<button type="button" class="history-item" data-key="' + escapeHtml(h.key) + '">' +
+          '<div><div class="history-item__main">' + escapeHtml(h.summary) + '</div>' +
+          '<div class="history-item__sub">' + escapeHtml(h.time) + '</div></div></button>';
+      }).join('');
+      el.querySelectorAll('.history-item').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var item = loadJSON(STORAGE.history, []).find(function (h) { return h.key === btn.dataset.key; });
+          if (item) restoreFromHistory(item);
+        });
+      });
+    }
+
+    function restoreFromHistory(item) {
+      setMode('calc');
+      $('amount').value = item.amount;
+      $('vat').value = item.vat;
+      var modeVal = item.calcMode || (item.inclusive ? 'total' : 'base');
+      var radio = document.querySelector('input[name="calcMode"][value="' + modeVal + '"]');
+      if (radio) radio.checked = true;
+      if (item.templateId) {
+        state.selectedTemplateId = item.templateId;
+        populateTemplateSelects(item.templateId);
       }
+      $('rounding').value = item.rounding;
+      updateAmountLabel();
+      calculate();
     }
 
-    function fallbackCopy(text, onSuccess) {
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.position = 'fixed';
-      ta.style.left = '-9999px';
-      document.body.appendChild(ta);
-      ta.select();
-      try {
-        document.execCommand('copy');
-        onSuccess();
-      } finally {
-        document.body.removeChild(ta);
+    function isCalcInclusive() {
+      var checked = document.querySelector('input[name="calcMode"]:checked');
+      return checked && checked.value === 'total';
+    }
+
+    // ── URL params ──
+    function updateUrl() {
+      if (state.currentMode !== 'calc' || !state.lastResult) return;
+      var r = state.lastResult;
+      var params = new URLSearchParams();
+      params.set('sum', $('amount').value.replace(',', '.'));
+      params.set('vat', String(r.vatPercent));
+      if (isCalcInclusive()) params.set('calcMode', 'total');
+      params.set('template', getSelectedTemplateId());
+      params.set('rounding', $('rounding').value);
+      params.set('mode', 'calc');
+      var url = location.pathname + '?' + params.toString();
+      history.replaceState(null, '', url);
+      $('shareUrl').value = location.origin + location.pathname + '?' + params.toString();
+      updateQR();
+    }
+
+    function updateQR() {
+      var url = $('shareUrl').value;
+      if (!url || location.protocol === 'file:') { $('qrBox').hidden = true; return; }
+      $('qrImg').src = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' + encodeURIComponent(url);
+      $('qrBox').hidden = false;
+    }
+
+    function loadFromUrl() {
+      var p = new URLSearchParams(location.search);
+      if (p.has('sum')) $('amount').value = p.get('sum').replace('.', ',');
+      if (p.has('vat')) $('vat').value = p.get('vat');
+      if (p.has('calcMode')) {
+        var radio = document.querySelector('input[name="calcMode"][value="' + p.get('calcMode') + '"]');
+        if (radio) radio.checked = true;
+      } else if (p.has('inclusive') && p.get('inclusive') === '1') {
+        var totalRadio = document.querySelector('input[name="calcMode"][value="total"]');
+        if (totalRadio) totalRadio.checked = true;
       }
+      if (p.has('template')) {
+        state.selectedTemplateId = p.get('template');
+        populateTemplateSelects(p.get('template'));
+      } else if (p.has('style')) {
+        state.selectedTemplateId = p.get('style');
+        populateTemplateSelects(p.get('style'));
+      }
+      if (p.has('rounding')) $('rounding').value = p.get('rounding');
+      if (p.has('mode')) setMode(p.get('mode'));
     }
 
-    const amountInput = document.getElementById('amount');
-    const vatInput = document.getElementById('vat');
-    const amountError = document.getElementById('amountError');
-    const vatError = document.getElementById('vatError');
-    const results = document.getElementById('results');
-    const resultBody = document.getElementById('resultBody');
-    const templateText = document.getElementById('templateText');
-    const copyTemplateBtn = document.getElementById('copyTemplateBtn');
-    const calcForm = document.getElementById('calcForm');
-
-    let debounceTimer = null;
-
-    function setFieldError(input, errorEl, hasError) {
-      input.classList.toggle('error', hasError);
-      errorEl.classList.toggle('visible', hasError);
+    // ── Modes ──
+    function setMode(mode) {
+      state.currentMode = mode;
+      document.querySelectorAll('.tab').forEach(function (t) {
+        var active = t.dataset.mode === mode;
+        t.classList.toggle('tab--active', active);
+        t.setAttribute('aria-selected', active);
+      });
+      document.querySelectorAll('.mode-panel').forEach(function (p) {
+        p.classList.toggle('mode-panel--active', p.dataset.mode === mode);
+      });
+      var showResults = mode === 'calc';
+      $('results').style.display = showResults ? '' : 'none';
+      if (mode !== 'calc') $('results').classList.remove('results--visible');
+      $('historyPanel').hidden = mode !== 'calc';
+      if (mode === 'words') calcWords();
+      if (mode === 'batch') calcBatch();
+      if (mode === 'invoice') calcTable();
+      if (mode === 'builder') updateBuilderPreview();
     }
 
+    function updateAmountLabel() {
+      $('amountLabel').textContent = isCalcInclusive() ? 'Сумма (с НДС)' : 'Сумма (без НДС)';
+    }
+
+    function checkLargeAmountWarning(amount) {
+      var w = $('amountWarning');
+      if (amount && amount.value >= 1000000 && amount.rubles % 1000 === 0) {
+        w.textContent = '⚠ Проверьте сумму: ' + formatDigits(amount.rubles, amount.kopecks) + ' — возможно, лишний ноль?';
+        w.classList.add('alert--visible');
+      } else { w.classList.remove('alert--visible'); }
+    }
+
+    // ── Main calculate ──
     function calculate() {
-      const amount = parseAmount(amountInput.value);
-      const vatPercent = parseVat(vatInput.value);
+      var amount = parseAmount($('amount').value);
+      var vatPercent = parseVat($('vat').value);
 
-      let valid = true;
+      $('amount').classList.toggle('input-wrap__field--error', amount === null && $('amount').value.trim() !== '');
+      $('amountError').classList.toggle('field__error--visible', amount === null && $('amount').value.trim() !== '');
+      $('vat').classList.toggle('input-wrap__field--error', vatPercent === null);
+      $('vatError').classList.toggle('field__error--visible', vatPercent === null);
 
-      if (amount === null) {
-        setFieldError(amountInput, amountError, amountInput.value.trim() !== '');
-        valid = false;
-      } else {
-        setFieldError(amountInput, amountError, false);
-      }
-
-      if (vatPercent === null) {
-        setFieldError(vatInput, vatError, true);
-        valid = false;
-      } else {
-        setFieldError(vatInput, vatError, false);
-      }
-
-      if (!valid) {
-        results.classList.remove('visible');
+      if (amount === null || vatPercent === null) {
+        $('results').classList.remove('results--visible');
         return;
       }
 
-      const vatCents = calcVatAmount(amount.cents, vatPercent);
-      const totalCents = amount.cents + vatCents;
+      checkLargeAmountWarning(amount);
 
-      const baseParts = { rubles: amount.rubles, kopecks: amount.kopecks };
-      const vatParts = centsToParts(vatCents);
-      const totalParts = centsToParts(totalCents);
+      var inclusive = isCalcInclusive();
+      var rounding = $('rounding').value;
+      var templateId = getSelectedTemplateId();
+      state.selectedTemplateId = templateId;
+      var amounts = calcAmounts(amount.cents, vatPercent, inclusive, rounding);
 
-      const base = amountToMoneyText(baseParts.rubles, baseParts.kopecks);
-      const vat = amountToMoneyText(vatParts.rubles, vatParts.kopecks);
-      const total = amountToMoneyText(totalParts.rubles, totalParts.kopecks);
+      var base = amountToMoneyText(centsToParts(amounts.baseCents).rubles, centsToParts(amounts.baseCents).kopecks);
+      var vat = amountToMoneyText(centsToParts(amounts.vatCents).rubles, centsToParts(amounts.vatCents).kopecks);
+      var total = amountToMoneyText(centsToParts(amounts.totalCents).rubles, centsToParts(amounts.totalCents).kopecks);
 
-      let rows =
-        '<tr>' +
-          '<td class="label">Сумма</td>' +
-          '<td class="digits">' + copyCell(base.digits, 'Копировать сумму в цифрах') + '</td>' +
-          '<td class="words">' + copyCell(base.fullText, 'Копировать сумму прописью') + '</td>' +
-        '</tr>';
+      var rows = '';
 
-      if (vatPercent > 0) {
-        rows +=
-          '<tr>' +
-            '<td class="label">НДС (' + escapeHtml(formatVatPercent(vatPercent)) + '%)</td>' +
-            '<td class="digits">' + copyCell(vat.digits, 'Копировать НДС в цифрах') + '</td>' +
-            '<td class="words">' + copyCell(vat.fullText, 'Копировать НДС прописью') + '</td>' +
-          '</tr>';
+      if (inclusive) {
+        rows += '<tr class="result-row result-row--total"><td class="result-table__label">Итого</td>' +
+          '<td class="digits">' + copyCell(total.digits, 'Итого цифры', 'digits', total.digitsPlain) + '</td>' +
+          '<td class="words">' + copyCell(total.fullText, 'Итого прописью', 'words') + '</td></tr>';
+        if (vatPercent > 0) {
+          rows += '<tr class="result-row"><td class="result-table__label">НДС<span class="result-table__label-sub">' + formatVatPercent(vatPercent) + '%</span></td>' +
+            '<td class="digits">' + copyCell(vat.digits, 'НДС цифры', 'digits', vat.digitsPlain) + '</td>' +
+            '<td class="words">' + copyCell(vat.fullText, 'НДС прописью', 'words') + '</td></tr>';
+          rows += '<tr class="result-row"><td class="result-table__label">Без НДС</td>' +
+            '<td class="digits">' + copyCell(base.digits, 'Без НДС цифры', 'digits', base.digitsPlain) + '</td>' +
+            '<td class="words">' + copyCell(base.fullText, 'Без НДС прописью', 'words') + '</td></tr>';
+        }
+      } else {
+        rows += '<tr class="result-row"><td class="result-table__label">Сумма</td>' +
+          '<td class="digits">' + copyCell(base.digits, 'Сумма цифры', 'digits', base.digitsPlain) + '</td>' +
+          '<td class="words">' + copyCell(base.fullText, 'Сумма прописью', 'words') + '</td></tr>';
+        if (vatPercent > 0) {
+          rows += '<tr class="result-row"><td class="result-table__label">НДС<span class="result-table__label-sub">' + formatVatPercent(vatPercent) + '%</span></td>' +
+            '<td class="digits">' + copyCell(vat.digits, 'НДС цифры', 'digits', vat.digitsPlain) + '</td>' +
+            '<td class="words">' + copyCell(vat.fullText, 'НДС прописью', 'words') + '</td></tr>';
+        }
+        rows += '<tr class="result-row result-row--total"><td class="result-table__label">Итого</td>' +
+          '<td class="digits">' + copyCell(total.digits, 'Итого цифры', 'digits', total.digitsPlain) + '</td>' +
+          '<td class="words">' + copyCell(total.fullText, 'Итого прописью', 'words') + '</td></tr>';
       }
 
-      rows +=
-        '<tr>' +
-          '<td class="label">Итого</td>' +
-          '<td class="digits">' + copyCell(total.digits, 'Копировать итого в цифрах') + '</td>' +
-          '<td class="words">' + copyCell(total.fullText, 'Копировать итого прописью') + '</td>' +
-        '</tr>';
+      $('resultBody').innerHTML = rows;
 
-      resultBody.innerHTML = rows;
+      var template = buildTemplateFromSelection(base, vat, total, vatPercent, templateId, inclusive);
+      $('templateText').textContent = template;
 
-      templateText.textContent = buildTemplate(base, vat, total, vatPercent);
-      results.classList.add('visible');
+      var tableRows = buildTableRows(inclusive, vatPercent, base, vat, total);
+
+      state.lastResult = {
+        base: base, vat: vat, total: total, vatPercent: vatPercent,
+        template: template, inclusive: inclusive, tableRows: tableRows, templateId: templateId,
+        exportText: buildExportText(base, vat, total, vatPercent, template, inclusive)
+      };
+
+      renderVatPresets(vatPercent);
+      $('results').classList.add('results--visible');
+      updateUrl();
+
+      saveHistory({
+        key: Date.now().toString(),
+        amount: $('amount').value,
+        vat: String(vatPercent),
+        calcMode: inclusive ? 'total' : 'base',
+        inclusive: inclusive,
+        templateId: templateId,
+        rounding: rounding,
+        summary: (inclusive ? total.digitsPlain : base.digitsPlain) + ' · НДС ' + formatVatPercent(vatPercent) + '%',
+        time: new Date().toLocaleString('ru-RU')
+      });
+      updateBuilderPreview();
     }
 
-    function debouncedCalculate() {
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(calculate, 200);
+    function buildExportText(base, vat, total, vatPct, template, inclusive) {
+      var lines = [];
+      lines.push('Сумма: ' + base.digitsPlain + ' — ' + base.fullText);
+      if (vatPct > 0) lines.push('НДС (' + formatVatPercent(vatPct) + '%): ' + vat.digitsPlain + ' — ' + vat.fullText);
+      lines.push('Итого: ' + total.digitsPlain + ' — ' + total.fullText, '', template);
+      return lines.join('\n');
     }
 
-    calcForm.addEventListener('submit', function (e) {
-      e.preventDefault();
+    function calcWords() {
+      var a = parseAmount($('wordsAmount').value);
+      var el = $('wordsResult'), txt = $('wordsResultText');
+      if (!a) { el.hidden = true; return; }
+      txt.textContent = $('wordsNumbersOnly').checked
+        ? amountToNumberText(a.rubles, a.kopecks)
+        : amountToMoneyText(a.rubles, a.kopecks).fullText;
+      el.hidden = false;
+    }
+
+    function calcTable() {
+      var lines = parseExcelInput($('tableInput').value);
+      var wrap = $('tableWrap'), toolbar = $('invoiceToolbar'), totals = $('invoiceTotals');
+      var vatPct = parseVat($('invoiceVat').value);
+      var inclusive = $('invoiceInclusive').checked;
+      var rounding = 'math';
+      var templateId = getSelectedTemplateId();
+      if (vatPct === null) vatPct = 0;
+
+      if (!lines.length) {
+        wrap.hidden = true; toolbar.hidden = true; totals.hidden = true;
+        $('invoiceHead').innerHTML = ''; $('invoiceBody').innerHTML = '';
+        return;
+      }
+
+      var visibleCols = getVisibleColumns();
+      var exportCols = getExportColumns();
+      var sumBase = 0, sumVat = 0, sumTotal = 0;
+      var computedRows = [];
+      var bodyHtml = [];
+
+      lines.forEach(function (amountStr, i) {
+        var data = computeRowDataFromAmount(amountStr, i, vatPct, inclusive, rounding, templateId);
+        computedRows.push(data);
+        if (!data.valid) {
+          bodyHtml.push('<tr><td colspan="' + visibleCols.length + '" style="color:var(--color-error)">Строка ' +
+            (i + 1) + ': «' + escapeHtml(amountStr) + '» — ошибка</td></tr>');
+          return;
+        }
+        sumBase += data.baseCents;
+        sumVat += data.vatCents;
+        sumTotal += data.totalCents;
+        bodyHtml.push('<tr>' + visibleCols.map(function (col) {
+          var val = cellValueFromRow(data, col.id);
+          var cls = TABLE_COLUMN_DEFS[col.id].num ? ' class="num"' : (TABLE_COLUMN_DEFS[col.id].wide ? ' class="inv-wide"' : '');
+          return '<td' + cls + '>' + escapeHtml(val || '—') + '</td>';
+        }).join('') + '</tr>');
+      });
+
+      $('invoiceHead').innerHTML = '<tr>' + visibleCols.map(function (c) {
+        return '<th>' + escapeHtml(TABLE_COLUMN_DEFS[c.id].label) + '</th>';
+      }).join('') + '</tr>';
+      $('invoiceBody').innerHTML = bodyHtml.join('');
+
+      var hasValid = sumTotal > 0 || sumBase > 0;
+      wrap.hidden = !hasValid;
+      toolbar.hidden = !hasValid;
+      totals.hidden = !hasValid;
+
+      if (hasValid) {
+        var tTotal = amountToMoneyText(centsToParts(sumTotal).rubles, centsToParts(sumTotal).kopecks);
+        $('invoiceTotalSum').textContent = 'Итого: ' + tTotal.digitsPlain + ' ₽';
+        $('invoiceTotalWords').textContent = tTotal.fullText;
+      }
+
+      var validRows = computedRows.filter(function (r) { return r.valid; });
+      var exp = buildExportFromRows(validRows, exportCols);
+      if (hasValid) {
+        var tBase = amountToMoneyText(centsToParts(sumBase).rubles, centsToParts(sumBase).kopecks);
+        var tVat = amountToMoneyText(centsToParts(sumVat).rubles, centsToParts(sumVat).kopecks);
+        var tTotal = amountToMoneyText(centsToParts(sumTotal).rubles, centsToParts(sumTotal).kopecks);
+        var totalRow = { index: '', valid: true, vatPct: vatPct, base: tBase, vat: tVat, total: tTotal, template: '' };
+        var totalCells = exportCols.map(function (c, idx) {
+          if (idx === 0) return 'ИТОГО';
+          return cellValueFromRow(totalRow, c.id);
+        });
+        exp.tsv += '\n' + totalCells.join('\t');
+        exp.csv += '\r\n' + totalCells.map(escapeCsvCell).join(';');
+      }
+      state.tableExport = exp;
+      $('invoiceCopyExcel')._tsv = exp.tsv;
+      $('invoiceExportCsv')._csv = exp.csv;
+    }
+
+    function getDemoContext() {
+      var amounts = calcAmounts(10000, 22, false, 'math');
+      var base = amountToMoneyText(centsToParts(amounts.baseCents).rubles, centsToParts(amounts.baseCents).kopecks);
+      var vat = amountToMoneyText(centsToParts(amounts.vatCents).rubles, centsToParts(amounts.vatCents).kopecks);
+      var total = amountToMoneyText(centsToParts(amounts.totalCents).rubles, centsToParts(amounts.totalCents).kopecks);
+      return buildTemplateContext(base, vat, total, 22);
+    }
+
+    function updateBuilderPreview() {
+      var text = $('builderText').value;
+      var ctx = state.lastResult
+        ? buildTemplateContext(state.lastResult.base, state.lastResult.vat, state.lastResult.total, state.lastResult.vatPercent)
+        : getDemoContext();
+      $('builderPreview').textContent = renderTemplate(text, ctx);
+    }
+
+    function renderTokenBar() {
+      $('tokenBar').innerHTML = TEMPLATE_TOKENS.map(function (t) {
+        return '<button type="button" class="token-chip" data-token="' + escapeHtml(t) + '">' + escapeHtml(t) + '</button>';
+      }).join('');
+    }
+
+    function insertTokenAtCursor(token) {
+      var ta = $('builderText');
+      var start = ta.selectionStart, end = ta.selectionEnd;
+      var val = ta.value;
+      ta.value = val.slice(0, start) + token + val.slice(end);
+      ta.selectionStart = ta.selectionEnd = start + token.length;
+      ta.focus();
+      updateBuilderPreview();
+    }
+
+    function loadBuilderTemplate(id) {
+      var t = getTemplateById(id);
+      if (t) $('builderText').value = t.text;
+      updateBuilderPreview();
+    }
+
+    function saveBuilderTemplate() {
+      var text = $('builderText').value.trim();
+      if (!text) { showToast('Шаблон пуст'); return; }
+      var name = prompt('Название шаблона:', 'Мой шаблон');
+      if (!name) return;
+      var list = getCustomTemplates();
+      var id = 'custom_' + Date.now();
+      list.push({ id: id, name: name.trim(), text: text });
+      saveCustomTemplates(list);
+      populateTemplateSelects(id);
+      $('builderTemplateSelect').value = id;
+      $('templateSelect').value = id;
+      state.selectedTemplateId = id;
+      showToast('Шаблон сохранён');
+    }
+
+    function applyBuilderToCalc() {
+      var id = $('builderTemplateSelect').value;
+      var t = getTemplateById(id);
+      if (!t) return;
+      if (!t.preset) {
+        var list = getCustomTemplates();
+        var existing = list.find(function (x) { return x.id === id; });
+        if (existing) existing.text = $('builderText').value.trim();
+        else list.push({ id: id, name: t.name, text: $('builderText').value.trim() });
+        saveCustomTemplates(list);
+      }
+      populateTemplateSelects(id);
+      $('templateSelect').value = id;
+      state.selectedTemplateId = id;
+      setMode('calc');
+      calculate();
+      showToast('Шаблон применён');
+    }
+
+    function calcBatch() {
+      var lines = parseExcelInput($('batchInput').value);
+      var wrap = $('batchTableWrap'), toolbar = $('batchToolbar');
+      var thead = $('batchTableHead'), tbody = $('batchTableBody');
+
+      if (!lines.length) {
+        wrap.hidden = true; toolbar.hidden = true;
+        tbody.innerHTML = ''; return;
+      }
+
+      var withVat = $('batchWithVat').checked;
+      var vatPct = parseVat($('batchVat').value);
+      if (withVat && vatPct === null) vatPct = 0;
+
+      var cols = withVat && vatPct > 0
+        ? ['№', 'Сумма', 'Прописью', 'НДС', 'НДС прописью', 'Итого', 'Итого прописью']
+        : ['№', 'Сумма', 'Прописью'];
+
+      thead.innerHTML = '<tr>' + cols.map(function (c) { return '<th>' + escapeHtml(c) + '</th>'; }).join('') + '</tr>';
+
+      var rowHtml = [], tsvLines = [cols.join('\t')], csvLines = [cols.join(';')];
+      var allText = [];
+
+      lines.forEach(function (line, i) {
+        var a = parseAmount(line);
+        if (!a) {
+          rowHtml.push('<tr><td colspan="' + cols.length + '" style="color:var(--color-error)">Строка ' + (i+1) + ': «' + escapeHtml(line) + '» — ошибка</td></tr>');
+          return;
+        }
+        var m = amountToMoneyText(a.rubles, a.kopecks);
+        var rowCells = [String(i + 1), m.digitsPlain, m.fullText];
+        var html = '<tr><td>' + (i+1) + '</td><td class="num">' + escapeHtml(m.digitsPlain) + '</td><td>' + escapeHtml(m.fullText) + '</td>';
+
+        if (withVat && vatPct > 0) {
+          var amts = calcAmounts(a.cents, vatPct, false, 'math');
+          var v = amountToMoneyText(centsToParts(amts.vatCents).rubles, centsToParts(amts.vatCents).kopecks);
+          var t = amountToMoneyText(centsToParts(amts.totalCents).rubles, centsToParts(amts.totalCents).kopecks);
+          rowCells.push(v.digitsPlain, v.fullText, t.digitsPlain, t.fullText);
+          html += '<td class="num">' + escapeHtml(v.digitsPlain) + '</td><td>' + escapeHtml(v.fullText) + '</td>' +
+            '<td class="num">' + escapeHtml(t.digitsPlain) + '</td><td>' + escapeHtml(t.fullText) + '</td>';
+          allText.push(m.digitsPlain + ' | ' + m.fullText + ' | итого ' + t.digitsPlain);
+        } else {
+          allText.push(m.digitsPlain + ' — ' + m.fullText);
+        }
+        html += '</tr>';
+        rowHtml.push(html);
+        tsvLines.push(rowCells.join('\t'));
+        csvLines.push(rowCells.map(escapeCsvCell).join(';'));
+      });
+
+      tbody.innerHTML = rowHtml.join('');
+      wrap.hidden = false;
+      toolbar.hidden = false;
+
+      $('copyBatchBtn')._batchText = allText.join('\n');
+      $('copyBatchExcelBtn')._tsv = tsvLines.join('\n');
+      $('exportBatchCsvBtn')._csv = '\ufeff' + csvLines.join('\r\n');
+    }
+
+    function debouncedCalc() { clearTimeout(debounceTimer); debounceTimer = setTimeout(calculate, 200); }
+
+    // ── Actions ──
+    function getCopyAllText() {
+      if (!state.lastResult) return '';
+      return state.lastResult.exportText;
+    }
+
+    function exportTxt() {
+      var text = getCopyAllText();
+      if (!text) return;
+      downloadFile(text, 'summa-' + Date.now() + '.txt', 'text/plain;charset=utf-8');
+    }
+
+    function exportCsv() {
+      if (!state.lastResult || !state.lastResult.tableRows) return;
+      downloadFile(rowsToCsv(state.lastResult.tableRows), 'summa-' + Date.now() + '.csv', 'text/csv;charset=utf-8');
+    }
+
+    function copyExcelTable() {
+      if (!state.lastResult || !state.lastResult.tableRows) return;
+      copyText(rowsToTsv(state.lastResult.tableRows));
+      showToast('Таблица скопирована — вставьте в Excel');
+    }
+
+    function doPrint() {
+      if (!state.lastResult) return;
+      var r = state.lastResult;
+      $('printArea').innerHTML = '<div style="font-family:serif;padding:2rem">' +
+        '<table style="width:100%;border-collapse:collapse;margin:1rem 0">' +
+        '<tr><th style="padding:8px;border:1px solid #ccc;text-align:left"></th><th style="padding:8px;border:1px solid #ccc">Цифры</th><th style="padding:8px;border:1px solid #ccc">Прописью</th></tr>' +
+        r.tableRows.map(function (row) {
+          return '<tr><td style="padding:8px;border:1px solid #ccc;font-weight:bold">' + escapeHtml(row.label) + '</td>' +
+            '<td style="padding:8px;border:1px solid #ccc">' + escapeHtml(row.digits) + '</td>' +
+            '<td style="padding:8px;border:1px solid #ccc">' + escapeHtml(row.words) + '</td></tr>';
+        }).join('') + '</table>' +
+        '<p style="margin-top:1rem;line-height:1.6">' + escapeHtml(r.template) + '</p></div>';
+      window.print();
+    }
+
+    function doShare() {
+      var text = getCopyAllText();
+      if (!text) return;
+      if (navigator.share) {
+        navigator.share({ title: 'Сумма прописью', text: text }).catch(function () { copyText(text); });
+      } else { copyText(text); }
+    }
+
+    // ── Events ──
+    document.querySelectorAll('.tab').forEach(function (tab) {
+      tab.addEventListener('click', function () { setMode(tab.dataset.mode); });
+    });
+
+    $('calcForm').addEventListener('submit', function (e) { e.preventDefault(); calculate(); });
+    $('amount').addEventListener('input', debouncedCalc);
+    $('vat').addEventListener('input', debouncedCalc);
+    document.querySelectorAll('input[name="calcMode"]').forEach(function (r) {
+      r.addEventListener('change', function () { updateAmountLabel(); calculate(); });
+    });
+    $('templateSelect').addEventListener('change', calculate);
+    $('rounding').addEventListener('change', calculate);
+
+    $('wordsAmount').addEventListener('input', function () { clearTimeout(debounceTimer); debounceTimer = setTimeout(calcWords, 200); });
+    $('wordsNumbersOnly').addEventListener('change', calcWords);
+    $('batchInput').addEventListener('input', function () { clearTimeout(debounceTimer); debounceTimer = setTimeout(calcBatch, 300); });
+    $('batchInput').addEventListener('paste', function () { setTimeout(calcBatch, 50); });
+    $('batchVat').addEventListener('input', function () { clearTimeout(debounceTimer); debounceTimer = setTimeout(calcBatch, 300); });
+    $('batchWithVat').addEventListener('change', calcBatch);
+
+    $('addVatBtn').addEventListener('click', function () {
+      var v = parseVat($('customVatInput').value);
+      if (v === null) return;
+      var custom = getCustomVats();
+      if (custom.indexOf(v) === -1) { custom.push(v); saveCustomVats(custom); }
+      $('vat').value = String(v);
+      $('customVatInput').value = '';
       calculate();
     });
 
-    amountInput.addEventListener('input', debouncedCalculate);
-    vatInput.addEventListener('input', debouncedCalculate);
-
-    function stripDigitSpaces(text) {
-      return text.replace(/[\s\u00a0\u202f]/g, '');
-    }
-
-    results.addEventListener('click', function (e) {
-      const btn = e.target.closest('.copy-btn');
+    $('results').addEventListener('click', function (e) {
+      var btn = e.target.closest('.btn-icon');
       if (!btn || btn.id === 'copyTemplateBtn') return;
-      const cell = btn.closest('.copy-cell');
-      const valueEl = cell && cell.querySelector('.copy-value');
-      if (!valueEl) return;
-      let text = valueEl.textContent;
-      if (btn.closest('td.digits')) text = stripDigitSpaces(text);
+      var cell = btn.closest('.copy-cell');
+      var val = cell && cell.querySelector('.copy-cell__value');
+      if (!val) return;
+      var text = val.dataset.plain || val.textContent;
       copyText(text, btn);
     });
 
-    copyTemplateBtn.addEventListener('click', function () {
-      copyText(templateText.textContent, copyTemplateBtn);
+    $('copyTemplateBtn').addEventListener('click', function () { copyText($('templateText').textContent, $('copyTemplateBtn')); });
+    $('copyAllBtn').addEventListener('click', function () { copyText(getCopyAllText()); });
+    $('copyExcelBtn').addEventListener('click', copyExcelTable);
+    $('exportCsvBtn').addEventListener('click', exportCsv);
+    $('copyWordsBtn').addEventListener('click', function () { copyText($('wordsResultText').textContent); });
+    $('copyBatchBtn').addEventListener('click', function () { copyText($('copyBatchBtn')._batchText || ''); });
+    $('copyBatchExcelBtn').addEventListener('click', function () {
+      copyText($('copyBatchExcelBtn')._tsv || '');
+      showToast('Таблица скопирована — вставьте в Excel');
+    });
+    $('exportBatchCsvBtn').addEventListener('click', function () {
+      var csv = $('exportBatchCsvBtn')._csv;
+      if (csv) downloadFile(csv, 'excel-batch-' + Date.now() + '.csv', 'text/csv;charset=utf-8');
+    });
+    $('copyUrlBtn').addEventListener('click', function () { copyText($('shareUrl').value); });
+    $('exportTxtBtn').addEventListener('click', exportTxt);
+    $('btnPrint').addEventListener('click', doPrint);
+    $('btnShare').addEventListener('click', doShare);
+    $('clearHistoryBtn').addEventListener('click', function () { saveJSON(STORAGE.history, []); renderHistory(); });
+
+    $('tableInput').addEventListener('input', function () { clearTimeout(debounceTimer); debounceTimer = setTimeout(calcTable, 200); });
+    $('tableInput').addEventListener('paste', function () { setTimeout(calcTable, 50); });
+    $('invoiceVat').addEventListener('input', function () { clearTimeout(debounceTimer); debounceTimer = setTimeout(calcTable, 200); });
+    $('invoiceInclusive').addEventListener('change', calcTable);
+    $('invoiceCopyExcel').addEventListener('click', function () {
+      copyText($('invoiceCopyExcel')._tsv || '');
+      showToast('Таблица скопирована — вставьте в Excel');
+    });
+    $('invoiceExportCsv').addEventListener('click', function () {
+      var csv = $('invoiceExportCsv')._csv;
+      if (csv) downloadFile(csv, 'tablitsa-' + Date.now() + '.csv', 'text/csv;charset=utf-8');
+    });
+    $('columnReset').addEventListener('click', function () {
+      saveColumnConfig(DEFAULT_COLUMNS.slice());
+      renderTableColumnList();
+      calcTable();
+      showToast('Колонки сброшены');
     });
 
-    amountInput.value = '100';
+    $('tokenBar').addEventListener('click', function (e) {
+      var chip = e.target.closest('.token-chip');
+      if (chip) insertTokenAtCursor(chip.dataset.token);
+    });
+    $('builderText').addEventListener('input', function () { clearTimeout(debounceTimer); debounceTimer = setTimeout(updateBuilderPreview, 150); });
+    $('builderTemplateSelect').addEventListener('change', function () { loadBuilderTemplate(this.value); });
+    $('builderSave').addEventListener('click', saveBuilderTemplate);
+    $('builderCopy').addEventListener('click', function () { copyText($('builderPreview').textContent); });
+    $('builderApply').addEventListener('click', applyBuilderToCalc);
+
+    // ── Init ──
+    populateTemplateSelects(state.selectedTemplateId);
+    renderTokenBar();
+    renderTableColumnList();
+    saveColumnConfig(getColumnConfig());
+    loadBuilderTemplate(state.selectedTemplateId);
+    if (!$('tableInput').value) $('tableInput').value = '100\n250,50';
+    loadFromUrl();
+    updateAmountLabel();
+    renderHistory();
+    if (!$('amount').value) $('amount').value = '100';
     calculate();
+    calcTable();
+  })();
   </script>
 </body>
 </html>
