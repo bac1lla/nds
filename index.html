@@ -329,6 +329,16 @@
     }
 
     #printArea { display: none; }
+
+    .simple-only { display: none; }
+    .app--simple .simple-only { display: inline-flex; }
+    .app--simple .full-only { display: none !important; }
+    .app--simple .settings-details > summary { display: none; }
+    .app--simple .settings-details { border: none; padding: 0; }
+    .app--simple .settings-details .settings-grid { display: grid; margin-top: var(--space-4); padding-top: 0; border-top: none; }
+    .app--simple .app-header__desc--full { display: none; }
+    .app--simple .app-header__desc--simple { display: block; }
+    .app-header__desc--simple { display: none; }
   </style>
 </head>
 <body>
@@ -336,15 +346,17 @@
     <header class="app-header no-print">
       <div class="app-header__main">
         <h1 class="app-header__title">Сумма прописью с НДС</h1>
-        <p class="app-header__desc">Калькулятор НДС и перевод сумм — с экспортом в Excel</p>
+        <p class="app-header__desc app-header__desc--full">Калькулятор НДС и перевод сумм — с экспортом в Excel</p>
+        <p class="app-header__desc app-header__desc--simple">Калькулятор НДС и сумма прописью</p>
       </div>
       <div class="toolbar">
-        <button type="button" class="btn btn--sm" id="btnPrint">Печать</button>
-        <button type="button" class="btn btn--sm" id="btnShare">Поделиться</button>
+        <a href="/v2" class="btn btn--sm simple-only">Полная версия →</a>
+        <button type="button" class="btn btn--sm full-only" id="btnPrint">Печать</button>
+        <button type="button" class="btn btn--sm full-only" id="btnShare">Поделиться</button>
       </div>
     </header>
 
-    <section class="panel no-print">
+    <section class="panel no-print full-only">
       <div class="panel__body">
         <nav class="tabs" role="tablist">
           <button type="button" class="tab tab--active" data-mode="calc" role="tab" aria-selected="true">Калькулятор</button>
@@ -383,7 +395,7 @@
                 <span class="input-wrap__suffix">%</span>
               </div>
               <div class="vat-presets" id="vatPresets"></div>
-              <div class="vat-add">
+              <div class="vat-add full-only">
                 <input type="text" id="customVatInput" placeholder="Своя ставка" inputmode="decimal">
                 <button type="button" class="btn btn--sm" id="addVatBtn">+ Добавить</button>
               </div>
@@ -413,7 +425,7 @@
     </section>
 
     <!-- WORDS MODE -->
-    <section class="panel mode-panel no-print" id="panelWords" data-mode="words">
+    <section class="panel mode-panel no-print full-only" id="panelWords" data-mode="words">
       <div class="panel__header"><h2 class="panel__title">Сумма прописью</h2></div>
       <div class="panel__body">
         <div class="toggle-row" style="margin-bottom:1rem">
@@ -440,7 +452,7 @@
     </section>
 
     <!-- EXCEL / BATCH MODE -->
-    <section class="panel mode-panel no-print" id="panelBatch" data-mode="batch">
+    <section class="panel mode-panel no-print full-only" id="panelBatch" data-mode="batch">
       <div class="panel__header"><h2 class="panel__title">Таблица из Excel</h2></div>
       <div class="panel__body">
         <div class="excel-hint">
@@ -483,7 +495,7 @@
     </section>
 
     <!-- TABLE MODE -->
-    <section class="panel mode-panel no-print" id="panelInvoice" data-mode="invoice">
+    <section class="panel mode-panel no-print full-only" id="panelInvoice" data-mode="invoice">
       <div class="panel__header"><h2 class="panel__title">Таблица</h2></div>
       <div class="panel__body">
         <div class="excel-hint">
@@ -532,7 +544,7 @@
     </section>
 
     <!-- BUILDER MODE -->
-    <section class="panel mode-panel no-print" id="panelBuilder" data-mode="builder">
+    <section class="panel mode-panel no-print full-only" id="panelBuilder" data-mode="builder">
       <div class="panel__header"><h2 class="panel__title">Конструктор шаблонов</h2></div>
       <div class="panel__body">
         <div class="field" style="margin-bottom:var(--space-4)">
@@ -565,7 +577,7 @@
       <div class="panel">
         <div class="panel__header">
           <h2 class="panel__title">Расчёт</h2>
-          <div class="toolbar no-print" id="resultsToolbar">
+          <div class="toolbar no-print full-only" id="resultsToolbar">
             <div class="toolbar-group">
               <span class="toolbar-group__label">Текст</span>
               <button type="button" class="btn btn--sm btn--primary" id="copyAllBtn">Копировать всё</button>
@@ -594,7 +606,7 @@
           </button>
         </div>
         <p class="template-panel__text" id="templateText"></p>
-        <div class="share-box no-print" id="shareBox">
+        <div class="share-box no-print full-only" id="shareBox">
           <div class="share-box__link">
             <input type="text" id="shareUrl" readonly>
             <button type="button" class="btn btn--sm" id="copyUrlBtn">Ссылка</button>
@@ -606,7 +618,7 @@
       </div>
     </section>
 
-    <section class="panel no-print" id="historyPanel">
+    <section class="panel no-print full-only" id="historyPanel">
       <div class="panel__header">
         <h2 class="panel__title">История</h2>
         <button type="button" class="btn btn--sm" id="clearHistoryBtn">Очистить</button>
@@ -623,6 +635,14 @@
   <script>
   (function () {
     'use strict';
+
+    function getAppVariant() {
+      var path = location.pathname.replace(/\/index\.html$/, '');
+      return /\/v2\/?$/.test(path) ? 'full' : 'simple';
+    }
+
+    var APP_VARIANT = getAppVariant();
+    document.documentElement.classList.add('app--' + APP_VARIANT);
 
     var STORAGE = { history: 'nds_history', customVats: 'nds_custom_vats', settings: 'nds_settings', customTemplates: 'nds_custom_templates', tableColumns: 'nds_table_columns' };
     var DEFAULT_VATS = [0, 10, 20, 22];
@@ -1184,6 +1204,7 @@
     }
 
     function restoreFromHistory(item) {
+      if (APP_VARIANT === 'simple') return;
       setMode('calc');
       $('amount').value = item.amount;
       $('vat').value = item.vat;
@@ -1247,11 +1268,20 @@
         populateTemplateSelects(p.get('style'));
       }
       if (p.has('rounding')) $('rounding').value = p.get('rounding');
-      if (p.has('mode')) setMode(p.get('mode'));
+      if (p.has('mode') && APP_VARIANT === 'full') setMode(p.get('mode'));
+    }
+
+    function applyAppVariant() {
+      if (APP_VARIANT === 'simple') {
+        setMode('calc');
+        var details = document.querySelector('.settings-details');
+        if (details) details.open = true;
+      }
     }
 
     // ── Modes ──
     function setMode(mode) {
+      if (APP_VARIANT === 'simple' && mode !== 'calc') return;
       state.currentMode = mode;
       document.querySelectorAll('.tab').forEach(function (t) {
         var active = t.dataset.mode === mode;
@@ -1264,7 +1294,7 @@
       var showResults = mode === 'calc';
       $('results').style.display = showResults ? '' : 'none';
       if (mode !== 'calc') $('results').classList.remove('results--visible');
-      $('historyPanel').hidden = mode !== 'calc';
+      $('historyPanel').hidden = mode !== 'calc' || APP_VARIANT === 'simple';
       if (mode === 'words') calcWords();
       if (mode === 'batch') calcBatch();
       if (mode === 'invoice') calcTable();
@@ -1355,18 +1385,20 @@
       $('results').classList.add('results--visible');
       updateUrl();
 
-      saveHistory({
-        key: Date.now().toString(),
-        amount: $('amount').value,
-        vat: String(vatPercent),
-        calcMode: inclusive ? 'total' : 'base',
-        inclusive: inclusive,
-        templateId: templateId,
-        rounding: rounding,
-        summary: (inclusive ? total.digitsPlain : base.digitsPlain) + ' · НДС ' + formatVatPercent(vatPercent) + '%',
-        time: new Date().toLocaleString('ru-RU')
-      });
-      updateBuilderPreview();
+      if (APP_VARIANT === 'full') {
+        saveHistory({
+          key: Date.now().toString(),
+          amount: $('amount').value,
+          vat: String(vatPercent),
+          calcMode: inclusive ? 'total' : 'base',
+          inclusive: inclusive,
+          templateId: templateId,
+          rounding: rounding,
+          summary: (inclusive ? total.digitsPlain : base.digitsPlain) + ' · НДС ' + formatVatPercent(vatPercent) + '%',
+          time: new Date().toLocaleString('ru-RU')
+        });
+        updateBuilderPreview();
+      }
     }
 
     function buildExportText(base, vat, total, vatPct, template, inclusive) {
@@ -1733,17 +1765,20 @@
 
     // ── Init ──
     populateTemplateSelects(state.selectedTemplateId);
-    renderTokenBar();
-    renderTableColumnList();
-    saveColumnConfig(getColumnConfig());
-    loadBuilderTemplate(state.selectedTemplateId);
-    if (!$('tableInput').value) $('tableInput').value = '100\n250,50';
+    applyAppVariant();
+    if (APP_VARIANT === 'full') {
+      renderTokenBar();
+      renderTableColumnList();
+      saveColumnConfig(getColumnConfig());
+      loadBuilderTemplate(state.selectedTemplateId);
+      if (!$('tableInput').value) $('tableInput').value = '100\n250,50';
+    }
     loadFromUrl();
     updateAmountLabel();
-    renderHistory();
+    if (APP_VARIANT === 'full') renderHistory();
     if (!$('amount').value) $('amount').value = '508';
     calculate();
-    calcTable();
+    if (APP_VARIANT === 'full') calcTable();
   })();
   </script>
 </body>
