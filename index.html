@@ -339,9 +339,7 @@
     .simple-only { display: none; }
     html:not(.app--full) .simple-only { display: inline-flex; }
     html:not(.app--full) .full-only { display: none !important; }
-    html:not(.app--full) .settings-details > summary { display: none; }
-    html:not(.app--full) .settings-details { border: none; padding: 0; }
-    html:not(.app--full) .settings-details .settings-grid { display: grid; margin-top: var(--space-4); padding-top: 0; border-top: none; }
+    html:not(.app--full) .settings-details { display: none; }
     html:not(.app--full) .app-header__desc--full { display: none; }
     html:not(.app--full) .app-header__desc--simple { display: block; }
     .app-header__desc--simple { display: none; }
@@ -717,6 +715,7 @@
     var HUNDREDS = ['','сто','двести','триста','четыреста','пятьсот','шестьсот','семьсот','восемьсот','девятьсот'];
     var SCALES = [['','','','m'],['тысяча','тысячи','тысяч','f'],['миллион','миллиона','миллионов','m'],['миллиард','миллиарда','миллиардов','m'],['триллион','триллиона','триллионов','m']];
 
+    var SIMPLE_DEFAULTS = { templateId: 'besides', rounding: 'math' };
     var state = { lastResult: null, currentMode: 'calc', selectedTemplateId: 'besides', tableExport: null, dragColId: null };
     var debounceTimer = null;
 
@@ -891,7 +890,13 @@
     }
 
     function getSelectedTemplateId() {
+      if (APP_VARIANT === 'simple') return SIMPLE_DEFAULTS.templateId;
       return $('templateSelect').value || state.selectedTemplateId || 'besides';
+    }
+
+    function getRounding() {
+      if (APP_VARIANT === 'simple') return SIMPLE_DEFAULTS.rounding;
+      return $('rounding').value;
     }
 
     function getTemplateText(id) {
@@ -1253,7 +1258,7 @@
       params.set('vat', String(r.vatPercent));
       if (isCalcInclusive()) params.set('calcMode', 'total');
       params.set('template', getSelectedTemplateId());
-      params.set('rounding', $('rounding').value);
+      params.set('rounding', getRounding());
       params.set('mode', 'calc');
       var url = location.pathname + '?' + params.toString();
       history.replaceState(null, '', url);
@@ -1279,22 +1284,22 @@
         var totalRadio = document.querySelector('input[name="calcMode"][value="total"]');
         if (totalRadio) totalRadio.checked = true;
       }
-      if (p.has('template')) {
-        state.selectedTemplateId = p.get('template');
-        populateTemplateSelects(p.get('template'));
-      } else if (p.has('style')) {
-        state.selectedTemplateId = p.get('style');
-        populateTemplateSelects(p.get('style'));
+      if (APP_VARIANT === 'full') {
+        if (p.has('template')) {
+          state.selectedTemplateId = p.get('template');
+          populateTemplateSelects(p.get('template'));
+        } else if (p.has('style')) {
+          state.selectedTemplateId = p.get('style');
+          populateTemplateSelects(p.get('style'));
+        }
+        if (p.has('rounding')) $('rounding').value = p.get('rounding');
       }
-      if (p.has('rounding')) $('rounding').value = p.get('rounding');
       if (p.has('mode') && APP_VARIANT === 'full') setMode(p.get('mode'));
     }
 
     function applyAppVariant() {
       if (APP_VARIANT === 'simple') {
         setMode('calc');
-        var details = document.querySelector('.settings-details');
-        if (details) details.open = true;
         var fullLink = $('fullVersionLink');
         if (fullLink) fullLink.href = getV2Url();
       }
@@ -1352,7 +1357,7 @@
       checkLargeAmountWarning(amount);
 
       var inclusive = isCalcInclusive();
-      var rounding = $('rounding').value;
+      var rounding = getRounding();
       var templateId = getSelectedTemplateId();
       state.selectedTemplateId = templateId;
       var amounts = calcAmounts(amount.cents, vatPercent, inclusive, rounding);
