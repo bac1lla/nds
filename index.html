@@ -629,7 +629,7 @@
     var COPY_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
 
     var TEMPLATE_PRESETS = {
-      besides: { name: 'Кроме того НДС', text: '{база_кратко}, кроме того НДС {ставка_ндс}% — {ндс_кратко}, итого {итого_кратко}' },
+      besides: { name: 'Кроме того НДС', text: '{база_кратко}, кроме того НДС {ставка_ндс}% — {ндс_кратко}, всего {итого_кратко}' },
       including: { name: 'В том числе НДС', text: '{итого_кратко}, в том числе НДС {ставка_ндс}% — {ндс_кратко}' },
       no_vat: { name: 'Без НДС', text: '{база_кратко}, без НДС (НДС не облагается)' },
       simple: { name: 'Только итог', text: '{итого_кратко}' }
@@ -1462,7 +1462,7 @@
     }
 
     function getDemoContext() {
-      var amounts = calcAmounts(10000, 22, false, 'math');
+      var amounts = calcAmounts(50800, 22, false, 'math');
       var base = amountToMoneyText(centsToParts(amounts.baseCents).rubles, centsToParts(amounts.baseCents).kopecks);
       var vat = amountToMoneyText(centsToParts(amounts.vatCents).rubles, centsToParts(amounts.vatCents).kopecks);
       var total = amountToMoneyText(centsToParts(amounts.totalCents).rubles, centsToParts(amounts.totalCents).kopecks);
@@ -1741,7 +1741,7 @@
     loadFromUrl();
     updateAmountLabel();
     renderHistory();
-    if (!$('amount').value) $('amount').value = '100';
+    if (!$('amount').value) $('amount').value = '508';
     calculate();
     calcTable();
   })();
