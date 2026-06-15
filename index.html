@@ -6,6 +6,12 @@
   <meta name="theme-color" content="#3568d4">
   <meta name="description" content="Сумма прописью с НДС — калькулятор и перевод чисел в текст">
   <title>Сумма прописью с НДС</title>
+  <script>
+    (function () {
+      var path = location.pathname.replace(/\/index\.html$/, '');
+      document.documentElement.classList.add(/\/v2\/?$/.test(path) ? 'app--full' : 'app--simple');
+    })();
+  </script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -331,13 +337,13 @@
     #printArea { display: none; }
 
     .simple-only { display: none; }
-    .app--simple .simple-only { display: inline-flex; }
-    .app--simple .full-only { display: none !important; }
-    .app--simple .settings-details > summary { display: none; }
-    .app--simple .settings-details { border: none; padding: 0; }
-    .app--simple .settings-details .settings-grid { display: grid; margin-top: var(--space-4); padding-top: 0; border-top: none; }
-    .app--simple .app-header__desc--full { display: none; }
-    .app--simple .app-header__desc--simple { display: block; }
+    html:not(.app--full) .simple-only { display: inline-flex; }
+    html:not(.app--full) .full-only { display: none !important; }
+    html:not(.app--full) .settings-details > summary { display: none; }
+    html:not(.app--full) .settings-details { border: none; padding: 0; }
+    html:not(.app--full) .settings-details .settings-grid { display: grid; margin-top: var(--space-4); padding-top: 0; border-top: none; }
+    html:not(.app--full) .app-header__desc--full { display: none; }
+    html:not(.app--full) .app-header__desc--simple { display: block; }
     .app-header__desc--simple { display: none; }
   </style>
 </head>
@@ -350,7 +356,7 @@
         <p class="app-header__desc app-header__desc--simple">Калькулятор НДС и сумма прописью</p>
       </div>
       <div class="toolbar">
-        <a href="/v2" class="btn btn--sm simple-only">Полная версия →</a>
+        <a href="v2/" class="btn btn--sm simple-only" id="fullVersionLink">Полная версия →</a>
         <button type="button" class="btn btn--sm full-only" id="btnPrint">Печать</button>
         <button type="button" class="btn btn--sm full-only" id="btnShare">Поделиться</button>
       </div>
@@ -636,13 +642,26 @@
   (function () {
     'use strict';
 
+    function getAppBasePath() {
+      var path = location.pathname.replace(/\/index\.html$/, '').replace(/\/v2\/?$/, '');
+      if (path === '/' || path === '') return '';
+      if (path.endsWith('/')) path = path.slice(0, -1);
+      return path;
+    }
+
+    function getV2Url() {
+      return getAppBasePath() + '/v2/' + location.search;
+    }
+
     function getAppVariant() {
       var path = location.pathname.replace(/\/index\.html$/, '');
       return /\/v2\/?$/.test(path) ? 'full' : 'simple';
     }
 
     var APP_VARIANT = getAppVariant();
-    document.documentElement.classList.add('app--' + APP_VARIANT);
+    if (!document.documentElement.classList.contains('app--' + APP_VARIANT)) {
+      document.documentElement.classList.add('app--' + APP_VARIANT);
+    }
 
     var STORAGE = { history: 'nds_history', customVats: 'nds_custom_vats', settings: 'nds_settings', customTemplates: 'nds_custom_templates', tableColumns: 'nds_table_columns' };
     var DEFAULT_VATS = [0, 10, 20, 22];
@@ -1276,6 +1295,8 @@
         setMode('calc');
         var details = document.querySelector('.settings-details');
         if (details) details.open = true;
+        var fullLink = $('fullVersionLink');
+        if (fullLink) fullLink.href = getV2Url();
       }
     }
 
